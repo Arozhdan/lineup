@@ -1,0 +1,16 @@
+services:
+  lineup:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+      WEBAPP_URL: ${WEBAPP_URL}
+      OWNER_TG_ID: ${OWNER_TG_ID}
+    volumes:
+      - lineup-data:/data
+
+volumes:
+  lineup-data:

@@ -1,0 +1,14 @@
+/* ===========================================================================
+   Lineup — Radius tokens
+   =========================================================================== */
+
+:root {
+  --radius-xs:   6px;
+  --radius-sm:   8px;
+  --radius-md:   10px;  /* grouped list sections */
+  --radius-lg:   12px;  /* cards, buttons */
+  --radius-xl:   16px;  /* sheets, large cards */
+  --radius-2xl:  20px;  /* bottom sheet top corners */
+  --radius-3xl:  28px;
+  --radius-full: 999px; /* pills, avatars, chips */
+}

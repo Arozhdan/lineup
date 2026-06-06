@@ -1,0 +1,40 @@
+/* ===========================================================================
+   Lineup — Base layer
+   Minimal reset + ambient defaults so any surface that links styles.css reads
+   as a Telegram Mini App out of the box. Token files must be imported first.
+   =========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tap highlight + selection tuned to brand */
+* { -webkit-tap-highlight-color: transparent; }
+::selection { background: var(--accent-soft); color: var(--text); }
+
+button, input, select, textarea { font-family: inherit; font-size: inherit; }
+
+/* Display helpers (used by the wordmark / hero numbers) */
+.lu-display { font-family: var(--font-display); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); }
+.lu-num { font-family: var(--font-display); font-variant-numeric: tabular-nums; font-weight: var(--weight-bold); }
+
+/* Uppercase grouped-list section label (iOS/Telegram) */
+.lu-section-label {
+  font-size: var(--text-footnote);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-hint);
+}

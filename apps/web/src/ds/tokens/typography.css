@@ -1,0 +1,48 @@
+/* ===========================================================================
+   Lineup — Typography tokens
+   =========================================================================== */
+
+:root {
+  /* Families */
+  /* UI text = native OS system font. -apple-system / BlinkMacSystemFont resolve
+     to SF Pro on Apple platforms and Roboto on Android — no webfont needed. */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI",
+             Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Archivo", var(--font-ui);
+  --font-display-wide: "Archivo Expanded", "Archivo", var(--font-ui);
+  /* Mono = native system monospace (ui-monospace → SF Mono / Roboto Mono). */
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale — sizes (mobile-first, px) */
+  --text-caption2:   11px;
+  --text-caption:    12px;
+  --text-footnote:   13px;
+  --text-subhead:    15px;
+  --text-body:       17px; /* iOS / Telegram base body */
+  --text-callout:    16px;
+  --text-headline:   17px; /* same size as body, heavier weight */
+  --text-title3:     20px;
+  --text-title2:     22px;
+  --text-title1:     28px;
+  --text-largetitle: 34px;
+  --text-display:    44px; /* hero / scoreboard */
+
+  /* Weights */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-heavy:    800;
+
+  /* Line heights */
+  --leading-tight:   1.12;
+  --leading-snug:    1.25;
+  --leading-normal:  1.4;
+  --leading-relaxed: 1.5;
+
+  /* Letter spacing */
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.02em;
+  --tracking-caps:   0.06em; /* uppercase section labels */
+}

@@ -1,0 +1,56 @@
+/* ===========================================================================
+   Lineup — Dark theme
+   Telegram "Night" blue-gray chrome + brand green accent. Applied when the
+   document carries [data-theme="dark"] (or .dark). Mini apps should set this
+   from Telegram's colorScheme.
+   =========================================================================== */
+
+[data-theme="dark"],
+.dark {
+  /* Accent stays brand green, brightened slightly for dark surfaces */
+  --accent:           #2BB869;
+  --accent-hover:     #34C673;
+  --accent-pressed:   #1FA85C;
+  --accent-soft:      rgba(43, 184, 105, 0.16);
+  --accent-on:        #07140C;
+  --link:             var(--tg-blue-dark);
+
+  /* Surfaces — Telegram night palette */
+  --bg:               #17212B;
+  --surface:          #232E3C;
+  --surface-2:        #2B3848;
+  --surface-sheet:    #1D2733;
+  --header-bg:        #17212B;
+
+  /* Text */
+  --text:             #FFFFFF;
+  --text-secondary:   #AEBDCC;
+  --text-hint:        #708499;
+  --text-on-accent:   #07140C;
+  --text-link:        var(--tg-blue-dark);
+  --text-destructive: #FF6259;
+
+  /* Lines */
+  --separator:        rgba(255, 255, 255, 0.10);
+  --separator-strong: rgba(255, 255, 255, 0.16);
+  --border:           rgba(255, 255, 255, 0.12);
+  --field-border:     rgba(255, 255, 255, 0.16);
+
+  /* Status soft fills on dark */
+  --success-soft:     rgba(43, 184, 105, 0.16);
+  --warning-soft:     rgba(245, 166, 35, 0.16);
+  --danger-soft:      rgba(255, 98, 89, 0.16);
+  --info-soft:        rgba(106, 183, 255, 0.16);
+
+  /* Overlays */
+  --scrim:            rgba(0, 0, 0, 0.55);
+  --fill-quaternary:  rgba(255, 255, 255, 0.06);
+  --fill-tertiary:    rgba(255, 255, 255, 0.10);
+
+  /* Elevation — deeper on dark */
+  --shadow-card:  0 1px 3px rgba(0, 0, 0, 0.40);
+  --shadow-md:    0 4px 16px rgba(0, 0, 0, 0.50);
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.55);
+  --shadow-pop:   0 8px 28px rgba(0, 0, 0, 0.55);
+  --shadow-fab:   0 6px 16px rgba(43, 184, 105, 0.40);
+}

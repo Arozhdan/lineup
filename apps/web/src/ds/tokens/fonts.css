@@ -1,0 +1,10 @@
+/* ===========================================================================
+   Lineup — Fonts
+   UI text uses the native system stack (authentic Telegram Mini App rendering
+   on each device). The brand display face is Archivo — used for the wordmark,
+   screen hero titles, scorelines and big stat numbers.
+   NOTE: Telegram itself renders in SF Pro (iOS) / Roboto (Android); both are
+   proprietary, so we intentionally fall back to the OS system font.
+   =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Archivo+Expanded:wght@600;700;800&display=swap');

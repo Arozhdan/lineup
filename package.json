@@ -1,0 +1,19 @@
+{
+  "name": "lineup",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -n server,web -c green,cyan \"pnpm --filter @lineup/server dev\" \"pnpm --filter @lineup/web dev\"",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @lineup/server db:generate",
+    "db:seed": "pnpm --filter @lineup/server db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "@libsql/client"]
+  }
+}

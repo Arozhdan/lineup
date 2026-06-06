@@ -1,0 +1,15 @@
+/* ===========================================================================
+   Lineup — Elevation / shadow tokens
+   The grouped UI is mostly flat (surfaces separated by background contrast).
+   Shadows are reserved for floating & overlay elements.
+   =========================================================================== */
+
+:root {
+  --shadow-none: none;
+  --shadow-sm:   0 1px 2px rgba(16, 24, 32, 0.06);
+  --shadow-card: 0 1px 3px rgba(16, 24, 32, 0.08), 0 1px 1px rgba(16, 24, 32, 0.04);
+  --shadow-md:   0 4px 16px rgba(16, 24, 32, 0.12);
+  --shadow-fab:  0 6px 16px rgba(31, 168, 92, 0.35); /* green floating button */
+  --shadow-sheet: 0 -8px 32px rgba(16, 24, 32, 0.18); /* bottom sheet */
+  --shadow-pop:  0 8px 28px rgba(16, 24, 32, 0.20);   /* popover / toast */
+}

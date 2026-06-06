@@ -1,0 +1,100 @@
+/* ===========================================================================
+   Lineup — Color tokens
+   Base palette + semantic aliases. Light theme on :root, dark theme override
+   lives in theme-dark.css. Structural chrome follows Telegram conventions;
+   the brand accent is "pitch green".
+   =========================================================================== */
+
+:root {
+  /* --- Brand: pitch green ------------------------------------------------ */
+  --green-50:  #E9F8EF;
+  --green-100: #CFF0DD;
+  --green-200: #A3E3BE;
+  --green-300: #6DD199;
+  --green-400: #3FBE78;
+  --green-500: #1FA85C; /* primary */
+  --green-600: #178A4A;
+  --green-700: #136E3B;
+  --green-800: #0F542E;
+  --green-900: #0A3A20;
+
+  /* --- Telegram blue (links / native interactive) ------------------------ */
+  --tg-blue-light: #3390EC;
+  --tg-blue-dark:  #6AB7FF;
+
+  /* --- Neutral gray (iOS-aligned) ---------------------------------------- */
+  --gray-0:   #FFFFFF;
+  --gray-50:  #F7F7FA;
+  --gray-100: #EFEFF4; /* grouped list background */
+  --gray-200: #E3E3E8;
+  --gray-300: #C6C6CC;
+  --gray-400: #AEAEB2;
+  --gray-500: #8E8E93; /* hint / placeholder */
+  --gray-600: #6D6D72;
+  --gray-700: #48484A;
+  --gray-800: #2C2C2E;
+  --gray-900: #1C1C1E;
+  --gray-950: #0E1116;
+
+  /* --- Position colors (football roles) ---------------------------------- */
+  --pos-gk:  #F5A623; /* goalkeeper — amber  */
+  --pos-def: #3B82F6; /* defender   — blue   */
+  --pos-mid: #1FA85C; /* midfielder — green  */
+  --pos-fwd: #EF4444; /* forward    — red    */
+
+  /* --- Status palette ---------------------------------------------------- */
+  --red-500:    #FF3B30; /* iOS destructive */
+  --amber-500:  #F5A623;
+  --blue-500:   #3390EC;
+
+  /* =========================================================================
+     SEMANTIC ALIASES — reference these in components, not the raw scale.
+     ========================================================================= */
+
+  /* Accent / primary */
+  --accent:            var(--green-500);
+  --accent-hover:      var(--green-600);
+  --accent-pressed:    var(--green-700);
+  --accent-soft:       var(--green-50);
+  --accent-on:         #FFFFFF; /* text/icon on accent */
+  --link:              var(--tg-blue-light);
+
+  /* Surfaces */
+  --bg:                var(--gray-100); /* app / grouped background */
+  --surface:           var(--gray-0);   /* cards, list sections */
+  --surface-2:         var(--gray-50);  /* nested / pressed cell */
+  --surface-sheet:     var(--gray-0);   /* bottom sheets, dialogs */
+  --header-bg:         var(--gray-0);
+
+  /* Text */
+  --text:              var(--gray-900);
+  --text-secondary:    var(--gray-600);
+  --text-hint:         var(--gray-500);
+  --text-on-accent:    #FFFFFF;
+  --text-link:         var(--link);
+  --text-destructive:  var(--red-500);
+
+  /* Lines & strokes */
+  --separator:         rgba(60, 60, 67, 0.18);
+  --separator-strong:  rgba(60, 60, 67, 0.30);
+  --border:            rgba(60, 60, 67, 0.16);
+  --field-border:      rgba(60, 60, 67, 0.22);
+
+  /* Status semantic */
+  --success:           var(--green-500);
+  --success-soft:      var(--green-50);
+  --warning:           var(--amber-500);
+  --warning-soft:      #FEF4E2;
+  --danger:            var(--red-500);
+  --danger-soft:       #FFE9E8;
+  --info:              var(--blue-500);
+  --info-soft:         #E7F1FC;
+
+  /* Overlays */
+  --scrim:             rgba(0, 0, 0, 0.40);
+  --fill-quaternary:   rgba(116, 116, 128, 0.08); /* subtle fill (chips) */
+  --fill-tertiary:     rgba(116, 116, 128, 0.12);
+
+  /* Brand gradient (logo lockup, hero) — floodlit pitch */
+  --grad-pitch: linear-gradient(135deg, #2FBE6E 0%, #1FA85C 55%, #136E3B 100%); /* @kind other */
+}
