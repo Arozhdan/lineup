@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Typecheck + test
+    # Self-hosted ARC runner on the homelab cluster (same scale set as the
+    # other projects). Swap the label for ubuntu-latest to run hosted.
+    runs-on: opshot-runners
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # reads version from package.json "packageManager"
+      - uses: actions/setup-node@v4
+        # 3-min step ceiling: setup-node normally takes ~1 min; the ARC
+        # tool-cache has been observed hanging on a stale lock. Fail fast.
+        timeout-minutes: 3
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  image:
+    name: Build & push image (GHCR)
+    runs-on: opshot-runners
+    needs: ci
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        # No push from PRs, so no login needed there.
+        if: github.event_name == 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          # Unique immutable tag per commit (sha-<short>) + a moving latest
+          # on the default branch for humans.
+          tags: |
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          # PRs validate the Dockerfile builds; only pushes to main publish.
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
