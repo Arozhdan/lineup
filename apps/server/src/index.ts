@@ -26,6 +26,16 @@ app.use(
 // Built web app (production). In dev Vite serves the frontend itself.
 if (env.webDist && fs.existsSync(env.webDist)) {
   const root = path.relative(process.cwd(), env.webDist) || ".";
+  // index.html must never be cached (it points at the hashed bundle);
+  // hashed assets are immutable and can be cached forever.
+  app.use("/*", async (c, next) => {
+    await next();
+    if (c.req.path.startsWith("/assets/")) {
+      c.header("cache-control", "public, max-age=31536000, immutable");
+    } else if (c.res.headers.get("content-type")?.includes("text/html")) {
+      c.header("cache-control", "no-cache");
+    }
+  });
   app.use("/*", serveStatic({ root }));
   app.get("*", serveStatic({ root, path: "index.html" }));
 }
