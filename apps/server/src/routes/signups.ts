@@ -33,8 +33,8 @@ async function promoteFromWaitlist(game: Game): Promise<void> {
   await notifyUsers(
     [next.userId],
     `🎉 Место освободилось — ты в составе <b>${game.title}</b>!` +
-      (game.price > 0 ? `\nВзнос ${game.price} — детали в приложении.` : ""),
-    `/#/game/${game.id}`,
+      (game.price > 0 ? `\nВзнос ${game.price} — оплати по QR в приложении.` : ""),
+    game.price > 0 ? `/#/game/${game.id}/pay` : `/#/game/${game.id}`,
   );
 }
 
@@ -201,7 +201,7 @@ export const signupRoutes = new Hono<AuthEnv>()
           ? `✅ Заявка одобрена — ты в составе <b>${game.title}</b>!` +
               (game.price > 0 ? `\nВзнос ${game.price} — оплати по QR в приложении.` : "")
           : `Заявка одобрена, но состав уже полон — ты в листе ожидания <b>${game.title}</b>.`,
-        `/#/game/${game.id}`,
+        status === "confirmed" && game.price > 0 ? `/#/game/${game.id}/pay` : `/#/game/${game.id}`,
       );
       return c.json({ status });
     },

@@ -84,10 +84,17 @@ export function Pay() {
     <div className="lu-scr">
       <NavBar title="Оплата" onBack={() => navigate(-1)} backLabel="Назад" />
       <div className="lu-scr__body">
-        <div className="lu-countdown" style={{ alignSelf: "center" }}>
-          <I.Clock width={14} height={14} />
-          {secs > 0 ? `Место забронировано · ${fmtClock(secs)}` : "Бронь истекла — но место за тобой"}
-        </div>
+        {g.payWhen === "signup" ? (
+          <div className="lu-countdown" style={{ alignSelf: "center" }}>
+            <I.Clock width={14} height={14} />
+            {secs > 0 ? `Место забронировано · ${fmtClock(secs)}` : "Бронь истекла — но место за тобой"}
+          </div>
+        ) : (
+          <div className="lu-youin-banner" style={{ alignSelf: "stretch" }}>
+            <I.CheckCircle width={16} height={16} />
+            Место за тобой — оплати взнос до игры
+          </div>
+        )}
 
         <div className="lu-center">
           <div className="lu-display" style={{ fontSize: 38, color: "var(--text)" }}>

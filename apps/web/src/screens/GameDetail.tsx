@@ -68,9 +68,16 @@ export function GameDetail() {
               Управлять игрой
             </Button>
           ) : g.my?.status === "confirmed" ? (
-            <Button block size="lg" variant="secondary" onClick={() => navigate(`/game/${id}/cancel`)}>
-              Я записан · управлять
-            </Button>
+            <>
+              {g.price > 0 && (g.my.payStatus === "unpaid" || g.my.payStatus === "partial") && (
+                <Button block size="lg" onClick={() => navigate(`/game/${id}/pay`)}>
+                  Оплатить взнос · {fmtMoney(g.my.payStatus === "partial" ? Math.round(g.price / 2) : g.price * (1 + g.my.guests))}
+                </Button>
+              )}
+              <Button block size="lg" variant="secondary" onClick={() => navigate(`/game/${id}/cancel`)}>
+                Я записан · управлять
+              </Button>
+            </>
           ) : g.my?.status === "pending" ? (
             <Button
               block
@@ -168,7 +175,11 @@ function GameBody({
       {g.my?.status === "confirmed" && (
         <div className="lu-youin-banner">
           <I.CheckCircle width={18} height={18} />
-          Ты в составе · позиция {g.my.position}
+          {g.price > 0 && (g.my.payStatus === "unpaid" || g.my.payStatus === "partial")
+            ? "Ты в составе · взнос не оплачен"
+            : g.my.payStatus === "marked"
+              ? "Ты в составе · оплата ждёт подтверждения"
+              : `Ты в составе · позиция ${g.my.position}`}
         </div>
       )}
       {g.my?.status === "pending" && (

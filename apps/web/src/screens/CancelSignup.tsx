@@ -83,6 +83,16 @@ export function CancelSignup() {
           />
         </ListSection>
         <ListSection label="Действия">
+          {g.price > 0 && (my?.payStatus === "unpaid" || my?.payStatus === "partial") && (
+            <ListItem
+              icon={<I.QrCode width={16} height={16} />}
+              iconColor="var(--accent)"
+              title="Оплатить взнос по QR"
+              subtitle={my?.payStatus === "partial" ? "осталась половина" : undefined}
+              chevron
+              onClick={() => navigate(`/game/${id}/pay`)}
+            />
+          )}
           <ListItem
             icon={<I.Repeat width={16} height={16} />}
             iconColor="var(--info)"
