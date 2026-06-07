@@ -10,7 +10,7 @@ import { db } from "../db/client.js";
 import { moderation, refunds, settings, signups, users, type Game, type Signup } from "../db/schema.js";
 import { filledCount, gameCapacity, nowSec } from "../lib/serialize.js";
 import { canSeeGame, myGroupIds } from "../lib/visibility.js";
-import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import { buildPayMsg, buildSpd, looksLikeIban } from "../lib/spd.js";
 import { signQr } from "./payqr.js";
 import QRCode from "qrcode";
 import { loadGame } from "./games.js";
@@ -161,7 +161,12 @@ export const signupRoutes = new Hono<AuthEnv>()
       recipient: cfg.qrRecipient || cfg.name,
       amount,
       currency: cfg.currency,
-      message: game.title,
+      message: buildPayMsg({
+        name: `${me.first} ${me.last}`.trim(),
+        handle: me.handle,
+        title: game.title,
+        startsAt: game.startsAt,
+      }),
       vs: game.id,
     });
     const dataUrl = await QRCode.toDataURL(payload, { width: 512, margin: 2 });

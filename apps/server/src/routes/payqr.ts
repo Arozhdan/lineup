@@ -12,9 +12,9 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import QRCode from "qrcode";
 import { db } from "../db/client.js";
-import { games, settings, signups } from "../db/schema.js";
+import { games, settings, signups, users } from "../db/schema.js";
 import { env } from "../env.js";
-import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import { buildPayMsg, buildSpd, looksLikeIban } from "../lib/spd.js";
 
 export const signQr = (payload: string): string =>
   createHmac("sha256", env.jwtSecret).update(`qr:${payload}`).digest("hex").slice(0, 24);
@@ -55,6 +55,7 @@ export const payqrPublic = new Hono()
       const mine = await db.query.signups.findFirst({
         where: and(eq(signups.gameId, game.id), eq(signups.userId, u)),
       });
+      const payer = await db.query.users.findFirst({ where: eq(users.id, u) });
       const amount =
         mine?.payStatus === "partial" ? Math.round(game.price / 2) : game.price * (1 + (mine?.guests ?? 0));
       return png(
@@ -63,7 +64,12 @@ export const payqrPublic = new Hono()
           recipient: cfg.qrRecipient || cfg.name,
           amount,
           currency: cfg.currency,
-          message: game.title,
+          message: buildPayMsg({
+            name: payer ? `${payer.first} ${payer.last}`.trim() : "",
+            handle: payer?.handle,
+            title: game.title,
+            startsAt: game.startsAt,
+          }),
           vs: game.id,
         }),
       );
@@ -91,13 +97,18 @@ export const payqrPublic = new Hono()
         if (s.payStatus === "unpaid") debt += fee;
         if (s.payStatus === "partial") debt += Math.round(fee / 2);
       }
+      const payer = await db.query.users.findFirst({ where: eq(users.id, u) });
       return png(
         buildSpd({
           iban: cfg.qrAccount,
           recipient: cfg.qrRecipient || cfg.name,
           amount: debt || undefined,
           currency: cfg.currency,
-          message: `Взносы · ${cfg.name}`,
+          message: buildPayMsg({
+            name: payer ? `${payer.first} ${payer.last}`.trim() : "",
+            handle: payer?.handle,
+            title: `vznosy ${cfg.name}`,
+          }),
         }),
       );
     },

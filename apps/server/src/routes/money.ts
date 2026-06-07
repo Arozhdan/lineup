@@ -10,7 +10,7 @@ import QRCode from "qrcode";
 import { db } from "../db/client.js";
 import { games, refunds, settings, signups, users, venues, type Signup } from "../db/schema.js";
 import { audit } from "../lib/audit.js";
-import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import { buildPayMsg, buildSpd, looksLikeIban } from "../lib/spd.js";
 import { signQr } from "./payqr.js";
 import { nowSec, publicUser } from "../lib/serialize.js";
 import { loadGame } from "./games.js";
@@ -230,7 +230,11 @@ export const moneyRoutes = new Hono<AuthEnv>()
         recipient: cfg.qrRecipient || cfg.name,
         amount: debt,
         currency: cfg.currency,
-        message: `Взносы · ${cfg.name}`,
+        message: buildPayMsg({
+          name: `${me.first} ${me.last}`.trim(),
+          handle: me.handle,
+          title: `vznosy ${cfg.name}`,
+        }),
       });
       debtQr = {
         dataUrl: await QRCode.toDataURL(payload, { width: 512, margin: 2 }),

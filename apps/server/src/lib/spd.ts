@@ -34,7 +34,7 @@ export function spdSafe(s: string, max: number): string {
   const out: string[] = [];
   for (const raw of s.normalize("NFD")) {
     if (/[̀-ͯ]/.test(raw)) continue; // strip diacritic marks (č→c, ř→r)
-    const ch = raw === "·" || raw === "—" || raw === "–" ? " " : raw === "×" ? "X" : raw;
+    const ch = raw === "·" || raw === "—" || raw === "–" ? " " : raw === "×" ? "X" : raw === "_" ? "-" : raw === "@" ? "" : raw;
     const lower = ch.toLowerCase();
     if (RU_LAT[lower] !== undefined) {
       out.push(RU_LAT[lower]!);
@@ -83,4 +83,21 @@ export function looksLikeIban(s: string): boolean {
     for (const d of value) remainder = (remainder * 10 + (d.charCodeAt(0) - 48)) % 97;
   }
   return remainder === 1;
+}
+
+/**
+ * MSG for a payment QR: payer name + tg handle + event + date, fitted
+ * into SPD's 60-char ASCII budget (the title shrinks first, the name,
+ * handle and date always survive).
+ */
+export function buildPayMsg(opts: { name: string; handle?: string; title: string; startsAt?: number }): string {
+  const d = opts.startsAt ? new Date(opts.startsAt * 1000) : null;
+  const date = d ? `${d.getDate()}.${d.getMonth() + 1}.` : "";
+  const name = spdSafe(opts.name, 30);
+  const handle = opts.handle ? spdSafe(opts.handle, 20) : "";
+  const fixed = [name, handle, date].filter(Boolean);
+  const fixedLen = fixed.join(" ").length;
+  const titleBudget = Math.max(0, 60 - fixedLen - 1);
+  const title = spdSafe(opts.title, titleBudget);
+  return [name, handle, title, date].filter(Boolean).join(" ").slice(0, 60);
 }
