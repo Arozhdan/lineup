@@ -41,7 +41,7 @@ export function Seasons() {
         {seasonsQuery.isPending && <div className="lu-skel" style={{ height: 120, borderRadius: "var(--radius-lg)" }} />}
 
         {active && (
-          <Card pad className="lu-card--accent" style={{ borderLeftColor: "var(--accent)" }}>
+          <Card pad className="lu-card--accent" style={{ borderLeftColor: "var(--accent)" }} onClick={() => navigate(`/seasons/${active.id}`)}>
             <div className="lu-row lu-row--between">
               <div className="lu-row" style={{ gap: 12 }}>
                 <span className="lu-mode-card__ic" style={{ background: "var(--grad-pitch)" }}>
@@ -52,7 +52,10 @@ export function Seasons() {
                   <div className="lu-muted">{fmtDay(active.startsAt)} – {fmtDay(active.endsAt)}</div>
                 </div>
               </div>
-              <Badge variant="success" dot>идёт</Badge>
+              <div className="lu-row" style={{ gap: 6 }}>
+                <Badge variant="success" dot>идёт</Badge>
+                <I.ChevronRight width={18} height={18} style={{ color: "var(--text-hint)" }} />
+              </div>
             </div>
             <div className="lu-row" style={{ marginTop: 12, gap: 8 }}>
               <Badge variant="neutral"><I.Calendar width={11} height={11} />{active.games} игр</Badge>

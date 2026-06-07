@@ -84,6 +84,13 @@ export function Live() {
     return list.length ? list : t.unassigned;
   };
 
+  const notStarted = !!data && !data.startedAt && !data.finishedAt;
+  const start = () =>
+    void run(() => unwrap(api.games[":id"].start.$post({ param: { id: String(id) } })), {
+      ok: "Матч начался — удачи!",
+      invalidate,
+    });
+
   const scoreA = data?.scoreA ?? 0;
   const scoreB = data?.scoreB ?? 0;
   const events = data?.events ?? [];
@@ -92,7 +99,7 @@ export function Live() {
   return (
     <div className="lu-scr">
       <NavBar
-        title="Матч идёт"
+        title={notStarted ? "Табло" : data?.finishedAt ? "Итог матча" : "Матч идёт"}
         onBack={() => navigate(-1)}
         backLabel="Назад"
         trailing={
@@ -106,10 +113,16 @@ export function Live() {
       <div className="lu-scr__body">
         <div className="lu-scoreboard">
           <div className="lu-center">
-            <span className="lu-scoreboard__live">
-              <span className="lu-scoreboard__dot" />
-              {data?.finishedAt ? "Матч завершён" : data?.paused ? "Пауза" : "В прямом эфире"}
-            </span>
+            {notStarted ? (
+              <span className="lu-scoreboard__live" style={{ color: "#9AA3AD" }}>
+                Матч не начат
+              </span>
+            ) : (
+              <span className="lu-scoreboard__live">
+                <span className="lu-scoreboard__dot" />
+                {data?.finishedAt ? "Матч завершён" : data?.paused ? "Пауза" : "В прямом эфире"}
+              </span>
+            )}
           </div>
           <div className="lu-scoreboard__main">
             <div className="lu-scoreboard__team">
@@ -133,11 +146,19 @@ export function Live() {
             </div>
           </div>
           <div className="lu-scoreboard__clock">
-            {fmtClock(displaySec)} · идёт матч{cleanSheet ? " · 🧤 сухой матч" : ""}
+            {notStarted
+              ? "ждёт стартового свистка"
+              : `${fmtClock(displaySec)} · ${data?.finishedAt ? "финальный свисток" : "идёт матч"}${cleanSheet ? " · 🧤 сухой матч" : ""}`}
           </div>
         </div>
 
-        {isOrganizer && !data?.finishedAt && (
+        {isOrganizer && notStarted && (
+          <p className="lu-note lu-center">
+            Отметь, кто пришёл, в «Чек-ин» — и начинай матч, когда команды на поле.
+          </p>
+        )}
+
+        {isOrganizer && !notStarted && !data?.finishedAt && (
           <div className="lu-form-grid">
             {(["a", "b"] as const).map((side) => (
               <button key={side} className="lu-tally-btn" onClick={() => setSheet({ side })}>
@@ -190,6 +211,10 @@ export function Live() {
           {data?.finishedAt ? (
             <Button block size="lg" leadingIcon={<I.Trophy width={18} height={18} />} onClick={() => navigate(`/game/${id}/result`)}>
               Матч завершён · к итогу
+            </Button>
+          ) : notStarted ? (
+            <Button block size="lg" leadingIcon={<I.Whistle width={18} height={18} />} onClick={start}>
+              Начать матч
             </Button>
           ) : (
             <Button block size="lg" variant="destructive" onClick={() => void finish()}>
