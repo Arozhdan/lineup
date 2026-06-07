@@ -6,23 +6,11 @@ import { ListItem, ListSection, NavBar, SegmentedControl, Switch } from "@/ds";
 import { I } from "@/icons";
 import { setTheme } from "@/lib/telegram";
 
-const localBool = (key: string, fallback = true): boolean => {
-  const v = localStorage.getItem(key);
-  return v == null ? fallback : v === "1";
-};
-
 export function SettingsScreen() {
   const navigate = useNavigate();
   const { toast, logout } = useApp();
 
-  const [pubProfile, setPubProfile] = useState(() => localBool("lu_pub_profile"));
-  const [pubStats, setPubStats] = useState(() => localBool("lu_pub_stats"));
   const [dark, setDark] = useState(() => document.documentElement.getAttribute("data-theme") === "dark");
-
-  const persist = (key: string, set: (v: boolean) => void) => (v: boolean) => {
-    localStorage.setItem(key, v ? "1" : "0");
-    set(v);
-  };
 
   return (
     <div className="lu-scr">
@@ -37,19 +25,21 @@ export function SettingsScreen() {
           />
         </ListSection>
 
-        <ListSection label="Приватность">
+        <ListSection label="Приватность" footer="Профиль и статистика видны участникам сообщества.">
           <ListItem
             icon={<I.Globe width={16} height={16} />}
             iconColor="var(--gray-500)"
             title="Публичный профиль"
             subtitle="виден другим игрокам"
-            trailing={<Switch checked={pubProfile} onChange={persist("lu_pub_profile", setPubProfile)} />}
+            onClick={() => toast("Скрыть профиль пока нельзя", "error")}
+            trailing={<Switch checked disabled />}
           />
           <ListItem
             icon={<I.BarChart width={16} height={16} />}
             iconColor="var(--gray-500)"
             title="Показывать статистику"
-            trailing={<Switch checked={pubStats} onChange={persist("lu_pub_stats", setPubStats)} />}
+            onClick={() => toast("Скрыть статистику пока нельзя", "error")}
+            trailing={<Switch checked disabled />}
           />
         </ListSection>
 
