@@ -104,7 +104,7 @@ export function QrConfig() {
               Сгенерировать
             </Button>
           </div>
-          <p className="lu-note lu-center" style={{ padding: 0 }}>Загрузи QR из банка или сгенерируй QR Platba (SPD) — его читают Česká spořitelna и все чешские банки.</p>
+          <p className="lu-note lu-center" style={{ padding: 0 }}>С указанным IBAN игроки получают QR Platba, сгенерированный автоматически — с точной суммой, именем игрока и игрой. Загруженная картинка — запасной вариант, если IBAN не задан (например, QR из Revolut).</p>
         </div>
 
         <ListSection label="Куда приходят деньги">
