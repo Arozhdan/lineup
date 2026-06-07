@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { authRoutes } from "./routes/auth.js";
 import { gamedayRoutes } from "./routes/gameday.js";
+import { groupRoutes } from "./routes/groups.js";
 import { gamesRoutes } from "./routes/games.js";
 import { liveRoutes } from "./routes/live.js";
 import { metaRoutes } from "./routes/meta.js";
@@ -15,6 +16,7 @@ import { teamRoutes } from "./routes/teams.js";
 export const api = new Hono()
   .route("/auth", authRoutes)
   .route("/", profileRoutes)
+  .route("/groups", groupRoutes)
   .route("/games", gamesRoutes)
   .route("/games", signupRoutes)
   .route("/games", teamRoutes)

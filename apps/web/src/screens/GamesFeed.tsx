@@ -72,7 +72,16 @@ export function GamesFeed() {
           {list.map((g) => (
             <MatchCardRU
               key={g.id}
-              title={g.title}
+              title={
+                g.restricted ? (
+                  <>
+                    <I.Lock width={15} height={15} style={{ verticalAlign: -1, marginRight: 5, color: "var(--text-hint)" }} />
+                    {g.title}
+                  </>
+                ) : (
+                  g.title
+                )
+              }
               caps={fmtCaps(g.startsAt)}
               venue={g.venueShort}
               format={g.format}

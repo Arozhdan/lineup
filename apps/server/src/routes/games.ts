@@ -7,10 +7,11 @@ import { createGameSchema, editGameSchema } from "@lineup/shared";
 import { authRequired, roleRequired, type AuthEnv } from "../auth.js";
 import { notifyUsers, rosterUserIds } from "../bot.js";
 import { db } from "../db/client.js";
-import { games, gameStats, mvpVotes, refunds, seasons, settings, signups, users, venues } from "../db/schema.js";
+import { games, gameStats, groups, mvpVotes, refunds, seasons, settings, signups, users, venues } from "../db/schema.js";
 import { audit } from "../lib/audit.js";
 import { fmtDateTime } from "../lib/dates.js";
 import { gameCard, nowSec, publicUser } from "../lib/serialize.js";
+import { canSeeGame, myGroupIds } from "../lib/visibility.js";
 import { activeSeasonData } from "../lib/season.js";
 import { mvpWinners } from "../lib/stats.js";
 
@@ -37,15 +38,25 @@ export const gamesRoutes = new Hono<AuthEnv>()
     const allSignups = ids.length ? await db.query.signups.findMany({ where: inArray(signups.gameId, ids) }) : [];
     const allVenues = await db.query.venues.findMany();
     const venueById = new Map(allVenues.map((v) => [v.id, v]));
+    const groupIds = me.role === "player" ? await myGroupIds(me.id) : new Set<number>();
+    const visible = list.filter((g) =>
+      canSeeGame(
+        g,
+        me,
+        groupIds,
+        allSignups.find((s) => s.gameId === g.id && s.userId === me.id) ?? null,
+      ),
+    );
     return c.json(
-      list.map((g) =>
-        gameCard(
+      visible.map((g) => ({
+        ...gameCard(
           g,
           allSignups.filter((s) => s.gameId === g.id),
           venueById.get(g.venueId),
           me.id,
         ),
-      ),
+        restricted: me.role !== "player" && !!g.visibleTo?.length,
+      })),
     );
   })
 
@@ -124,8 +135,23 @@ export const gamesRoutes = new Hono<AuthEnv>()
 
     const active = all.filter((s) => s.status !== "cancelled");
     const mine = active.find((s) => s.userId === me.id) ?? null;
+
+    // Private events: pretend the game doesn't exist for non-members.
+    const groupIds = me.role === "player" ? await myGroupIds(me.id) : new Set<number>();
+    if (!canSeeGame(game, me, groupIds, mine)) throw new HTTPException(404, { message: "Игра не найдена" });
+
+    // Group names are organizer-only — players never learn about audiences.
+    const isAdmin = me.role !== "player";
+    const audienceGroups =
+      isAdmin && game.visibleTo?.length
+        ? (await db.query.groups.findMany({ where: inArray(groups.id, game.visibleTo) })).map((x) => ({ id: x.id, name: x.name }))
+        : [];
+
     return c.json({
       ...gameCard(game, all, venue, me.id),
+      restricted: isAdmin && !!game.visibleTo?.length,
+      visibleTo: isAdmin ? (game.visibleTo ?? null) : null,
+      audienceGroups,
       venueInfo: venue ? { id: venue.id, name: venue.name, addr: venue.addr, rent: venue.rent } : null,
       startedAt: game.startedAt,
       finishedAt: game.finishedAt,
@@ -153,6 +179,7 @@ export const gamesRoutes = new Hono<AuthEnv>()
       deadlineAt: input.deadlineAt ?? null,
       venueId: input.venueId,
       notes: input.notes,
+      visibleTo: input.visibleTo?.length ? input.visibleTo : null,
       seasonId: season?.id ?? null,
       createdBy: me.id,
     };

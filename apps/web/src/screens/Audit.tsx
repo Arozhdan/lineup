@@ -19,6 +19,7 @@ const COLOR: Record<AuditAction, string> = {
   settings: "var(--accent)",
   role: "var(--accent)",
   venue: "var(--accent)",
+  group: "#8B5CF6",
 };
 
 const icon = (action: AuditAction): ReactNode => {
@@ -42,6 +43,8 @@ const icon = (action: AuditAction): ReactNode => {
       return <I.Users {...props} />;
     case "venue":
       return <I.Field {...props} />;
+    case "group":
+      return <I.Users {...props} />;
   }
 };
 
@@ -67,6 +70,8 @@ const verb = (action: AuditAction, target: string): string => {
       return `изменил роль ${target}`;
     case "venue":
       return `добавил площадку ${target}`;
+    case "group":
+      return `группа ${target}`;
   }
 };
 

@@ -49,6 +49,7 @@ import { Seasons } from "@/screens/Seasons";
 import { NewSeason } from "@/screens/NewSeason";
 import { SeasonArchive } from "@/screens/SeasonArchive";
 import { Tools } from "@/screens/Tools";
+import { Groups } from "@/screens/Groups";
 import { Roles } from "@/screens/Roles";
 import { Community } from "@/screens/Community";
 import { QrConfig } from "@/screens/QrConfig";
@@ -167,6 +168,7 @@ export function App() {
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/player/:id" element={<PublicProfile />} />
           <Route path="/venues" element={<Venues />} />
+          <Route path="/groups" element={<Groups />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/seasons" element={<Seasons />} />
           <Route path="/seasons/new" element={<NewSeason />} />

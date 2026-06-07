@@ -28,7 +28,8 @@ export function Manage() {
   const run = useAction();
 
   const [tab, setTab] = useState<"confirmed" | "waitlist" | "pending">("confirmed");
-  const [sheet, setSheet] = useState<null | "more" | "cancel" | "reschedule">(null);
+  const [sheet, setSheet] = useState<null | "more" | "cancel" | "reschedule" | "visibility">(null);
+  const [visDraft, setVisDraft] = useState<number[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [date, setDate] = useState("");
@@ -43,6 +44,12 @@ export function Manage() {
   const g = gameQuery.data;
 
   const invalidate: string[][] = [["game", id], ["games"]];
+
+  const groupsQuery = useQuery({
+    queryKey: ["groups"],
+    queryFn: () => unwrap(api.groups.$get()),
+  });
+  const groupList = groupsQuery.data ?? [];
 
   const openReschedule = () => {
     if (g) {
@@ -145,6 +152,13 @@ export function Manage() {
             </button>
           ))}
         </div>
+
+        {g?.restricted && (
+          <p className="lu-note" style={{ padding: "0 2px" }}>
+            <I.Lock width={13} height={13} style={{ verticalAlign: -2, marginRight: 4 }} />
+            Приватная игра · видна группам: {g.audienceGroups.map((x) => x.name).join(", ")}
+          </p>
+        )}
 
         <div className="lu-tablist" style={{ marginTop: 4 }}>
           {(
@@ -273,6 +287,16 @@ export function Manage() {
               subtitle={g ? `${fmtDay(g.startsAt)} · ${fmtTime(g.startsAt)}` : undefined}
               onClick={openReschedule}
             />
+            <ListItemRow
+              icon={<I.Lock width={16} height={16} />}
+              iconColor="var(--accent)"
+              title="Видимость"
+              subtitle={g?.restricted ? `группы: ${g.audienceGroups.map((x) => x.name).join(", ")}` : "видна всем игрокам"}
+              onClick={() => {
+                setVisDraft(g?.visibleTo ?? []);
+                setSheet("visibility");
+              }}
+            />
             <ListItemRow icon={<I.Share width={16} height={16} />} iconColor="var(--gray-500)" title="Скопировать ссылку" onClick={() => { share(); setSheet(null); }} />
             <ListItemRow icon={<I.X width={16} height={16} />} iconColor="var(--danger)" title="Отменить игру" destructive onClick={() => setSheet("cancel")} />
           </ListSectionLike>
@@ -280,6 +304,47 @@ export function Manage() {
       </Sheet>
 
       {/* reschedule sheet */}
+      <Sheet open={sheet === "visibility"} onClose={() => setSheet(null)} title="Кому видна игра">
+        {sheet === "visibility" && (
+          <>
+            <p className="lu-sheet-lede">Игроки не узнают об ограничении — приватная игра просто не видна посторонним.</p>
+            <div className="lu-chips" style={{ marginBottom: 16 }}>
+              <button className="lu-chip" data-on={visDraft.length === 0} onClick={() => setVisDraft([])}>
+                Всем игрокам
+              </button>
+              {groupList.map((gr) => (
+                <button
+                  key={gr.id}
+                  className="lu-chip"
+                  data-on={visDraft.includes(gr.id)}
+                  onClick={() => setVisDraft((v) => (v.includes(gr.id) ? v.filter((x) => x !== gr.id) : [...v, gr.id]))}
+                >
+                  {gr.name} · {gr.members.length}
+                </button>
+              ))}
+            </div>
+            <Button
+              block
+              size="lg"
+              onClick={() =>
+                void run(
+                  () =>
+                    unwrap(
+                      api.games[":id"].$patch({
+                        param: { id: String(id) },
+                        json: { visibleTo: visDraft.length ? visDraft : null },
+                      }),
+                    ),
+                  { ok: "Видимость обновлена", invalidate },
+                ).then(() => setSheet(null))
+              }
+            >
+              Сохранить
+            </Button>
+          </>
+        )}
+      </Sheet>
+
       <Sheet open={sheet === "reschedule"} onClose={() => setSheet(null)} title="Перенести игру">
         {sheet === "reschedule" && (
           <div className="lu-stack" style={{ gap: 12 }}>

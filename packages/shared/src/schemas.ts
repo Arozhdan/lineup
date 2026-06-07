@@ -51,6 +51,8 @@ const gameBase = {
   deadlineAt: z.number().int().positive().nullable().optional(),
   venueId: z.number().int().positive(),
   notes: z.string().trim().max(500).default(""),
+  /** Group ids the game is visible to; null/empty = everyone. */
+  visibleTo: z.array(z.number().int().positive()).max(50).nullable().default(null),
 };
 
 export const createGameSchema = z.discriminatedUnion("kind", [
@@ -74,6 +76,7 @@ export const createGameSchema = z.discriminatedUnion("kind", [
 
 export const editGameSchema = z.object({
   title: z.string().trim().min(1).max(120).optional(),
+  visibleTo: z.array(z.number().int().positive()).max(50).nullable().optional(),
   startsAt: z.number().int().positive().optional(),
   deadlineAt: z.number().int().positive().nullable().optional(),
   venueId: z.number().int().positive().optional(),
@@ -150,6 +153,10 @@ export const complaintSchema = z.object({
   userId: z.number().int().positive(),
   gameId: z.number().int().positive().nullable().default(null),
   reason: z.string().trim().min(5, "Опиши, что случилось").max(300),
+});
+
+export const groupSchema = z.object({
+  name: z.string().trim().min(1, "Название обязательно").max(60),
 });
 
 export const moderationSchema = z.object({

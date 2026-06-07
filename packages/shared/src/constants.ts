@@ -91,5 +91,5 @@ export const BROADCAST_AUDIENCE_LABEL: Record<BroadcastAudience, string> = {
   all: "Все игроки",
 };
 
-export const AUDIT_ACTIONS = ["ban", "warn", "penalty", "refund", "edit", "cancel", "season", "settings", "role", "venue"] as const;
+export const AUDIT_ACTIONS = ["ban", "warn", "penalty", "refund", "edit", "cancel", "season", "settings", "role", "venue", "group"] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

@@ -48,6 +48,23 @@ export const settings = sqliteTable("settings", {
   autoRefund: integer("auto_refund", { mode: "boolean" }).notNull().default(true),
 });
 
+/** Admin-only audiences. Players never see groups or their membership. */
+export const groups = sqliteTable("groups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  createdAt: integer("created_at").notNull().default(now),
+});
+
+export const groupMembers = sqliteTable(
+  "group_members",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    groupId: integer("group_id").notNull(),
+    userId: integer("user_id").notNull(),
+  },
+  (t) => [uniqueIndex("group_members_pair").on(t.groupId, t.userId)],
+);
+
 export const venues = sqliteTable("venues", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
@@ -118,6 +135,8 @@ export const games = sqliteTable(
     scoreA: integer("score_a").notNull().default(0),
     scoreB: integer("score_b").notNull().default(0),
     teamsPublishedAt: integer("teams_published_at"),
+    /** Group ids the game is visible to; null/empty = everyone. */
+    visibleTo: text("visible_to", { mode: "json" }).$type<number[] | null>(),
     draft: text("draft", { mode: "json" }).$type<DraftState>(),
     remindedAt: integer("reminded_at"),
     seasonId: integer("season_id"),

@@ -48,6 +48,7 @@ export function CreateGame() {
   const [price, setPrice] = useState("350");
   const [payWhen, setPayWhen] = useState<PayWhen>("signup");
   const [approval, setApproval] = useState(false);
+  const [visibleTo, setVisibleTo] = useState<number[]>([]); // empty = всем
   const [capOn, setCapOn] = useState(false);
   const [capacity, setCapacity] = useState("20");
   const [notes, setNotes] = useState("");
@@ -59,6 +60,14 @@ export function CreateGame() {
   });
   const venues = venuesQuery.data ?? [];
   const effectiveVenue = venueId ?? venues[0]?.id ?? null;
+
+  const groupsQuery = useQuery({
+    queryKey: ["groups"],
+    queryFn: () => unwrap(api.groups.$get()),
+  });
+  const groupList = groupsQuery.data ?? [];
+  const toggleGroup = (id: number) =>
+    setVisibleTo((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
 
   const isGame = type === "game";
   const main = aside * 2;
@@ -86,6 +95,7 @@ export function CreateGame() {
                 payWhen,
                 splitMode: split,
                 approval,
+                visibleTo: visibleTo.length ? visibleTo : null,
               },
             }),
           )
@@ -100,6 +110,7 @@ export function CreateGame() {
                 notes: notes.trim(),
                 capacity: capOn ? +capacity || 0 : null,
                 price: +price || 0,
+                visibleTo: visibleTo.length ? visibleTo : null,
               },
             }),
           );
@@ -286,6 +297,27 @@ export function CreateGame() {
               </div>
             </div>
           </>
+        )}
+
+        {groupList.length > 0 && (
+          <div>
+            <div className="lu-section-label" style={{ marginBottom: 8, paddingLeft: 2 }}>Кому видна игра</div>
+            <div className="lu-chips">
+              <button className="lu-chip" data-on={visibleTo.length === 0} onClick={() => setVisibleTo([])}>
+                Всем игрокам
+              </button>
+              {groupList.map((g) => (
+                <button key={g.id} className="lu-chip" data-on={visibleTo.includes(g.id)} onClick={() => toggleGroup(g.id)}>
+                  {g.name} · {g.members.length}
+                </button>
+              ))}
+            </div>
+            {visibleTo.length > 0 && (
+              <p className="lu-note" style={{ paddingTop: 6 }}>
+                Приватная игра: её увидят только участники выбранных групп. Игроки не узнают об ограничении.
+              </p>
+            )}
+          </div>
         )}
       </div>
       <div className="lu-mainbtn">

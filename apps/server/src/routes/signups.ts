@@ -9,6 +9,7 @@ import { notifyUsers } from "../bot.js";
 import { db } from "../db/client.js";
 import { moderation, refunds, settings, signups, users, type Game, type Signup } from "../db/schema.js";
 import { filledCount, gameCapacity, nowSec } from "../lib/serialize.js";
+import { canSeeGame, myGroupIds } from "../lib/visibility.js";
 import { loadGame } from "./games.js";
 
 const idParam = zValidator("param", z.object({ id: z.coerce.number().int().positive() }));
@@ -58,6 +59,9 @@ export const signupRoutes = new Hono<AuthEnv>()
     });
     if (existing && existing.status !== "cancelled") {
       throw new HTTPException(409, { message: "Ты уже записан на эту игру" });
+    }
+    if (!canSeeGame(game, me, me.role === "player" ? await myGroupIds(me.id) : new Set(), existing)) {
+      throw new HTTPException(404, { message: "Игра не найдена" });
     }
 
     const all = await db.query.signups.findMany({ where: eq(signups.gameId, game.id) });
@@ -127,6 +131,9 @@ export const signupRoutes = new Hono<AuthEnv>()
       where: and(eq(signups.gameId, game.id), eq(signups.userId, me.id)),
     });
     if (existing && existing.status !== "cancelled") throw new HTTPException(409, { message: "Ты уже в списке" });
+    if (!canSeeGame(game, me, me.role === "player" ? await myGroupIds(me.id) : new Set(), existing)) {
+      throw new HTTPException(404, { message: "Игра не найдена" });
+    }
     const { position } = c.req.valid("json");
     const values = { position, guests: 0, status: "waitlist" as const, payStatus: "none" as const, team: null, cancelledAt: null };
     if (existing) await db.update(signups).set({ ...values, createdAt: nowSec() }).where(eq(signups.id, existing.id));
