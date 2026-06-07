@@ -3,11 +3,11 @@ import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
-import { assignRoleSchema, broadcastSchema, moderationSchema, seasonSchema, seriesSchema, venueSchema } from "@lineup/shared";
+import { assignRoleSchema, broadcastSchema, complaintSchema, moderationSchema, seasonSchema, seriesSchema, venueSchema } from "@lineup/shared";
 import { authRequired, roleRequired, type AuthEnv } from "../auth.js";
 import { notifyUsers, rosterUserIds } from "../bot.js";
 import { db } from "../db/client.js";
-import { auditLog, broadcasts, games, moderation, seasons, series, signups, users, venues } from "../db/schema.js";
+import { auditLog, broadcasts, complaints, games, moderation, seasons, series, signups, users, venues } from "../db/schema.js";
 import { audit } from "../lib/audit.js";
 import { nowSec, publicUser } from "../lib/serialize.js";
 import { activeSeasonData } from "../lib/season.js";
@@ -161,14 +161,37 @@ export const metaRoutes = new Hono<AuthEnv>()
   .get("/moderation", roleRequired("organizer"), async (c) => {
     const { reliability } = await activeSeasonData();
     const actions = await db.query.moderation.findMany({ orderBy: [desc(moderation.createdAt)] });
+    const allComplaints = await db.query.complaints.findMany({ orderBy: [desc(complaints.createdAt)] });
+    const openComplaints = allComplaints.filter((x) => x.status === "open");
     const flaggedIds = [...reliability.values()]
       .filter((r) => r.signups >= 2 && (r.reliability < 80 || r.noShows > 0 || r.lateCancels > 0))
       .map((r) => r.userId);
-    const userIds = [...new Set([...flaggedIds, ...actions.map((a) => a.userId)])];
+    const userIds = [
+      ...new Set([
+        ...flaggedIds,
+        ...actions.map((a) => a.userId),
+        ...openComplaints.flatMap((x) => [x.aboutId, x.byId]),
+      ]),
+    ];
     const players = userIds.length ? await db.query.users.findMany({ where: inArray(users.id, userIds) }) : [];
     const byId = new Map(players.map((u) => [u.id, u]));
     const activeBans = new Set(actions.filter((a) => a.kind === "ban" && !a.liftedAt).map((a) => a.userId));
+    const gameIds = [...new Set(openComplaints.map((x) => x.gameId).filter((x): x is number => !!x))];
+    const gameRows = gameIds.length ? await db.query.games.findMany({ where: inArray(games.id, gameIds) }) : [];
+    const gameById = new Map(gameRows.map((g) => [g.id, g]));
     return c.json({
+      complaints: openComplaints
+        .filter((x) => byId.has(x.aboutId))
+        .map((x) => ({
+          id: x.id,
+          about: publicUser(byId.get(x.aboutId)!),
+          by: byId.has(x.byId) ? `${byId.get(x.byId)!.first} ${byId.get(x.byId)!.last}`.trim() : "?",
+          reason: x.reason,
+          gameTitle: x.gameId ? (gameById.get(x.gameId)?.title ?? "") : "",
+          createdAt: x.createdAt,
+          banned: activeBans.has(x.aboutId),
+          reliability: reliability.get(x.aboutId)?.reliability ?? 100,
+        })),
       flagged: flaggedIds
         .filter((id) => byId.has(id))
         .map((id) => {
@@ -203,6 +226,10 @@ export const metaRoutes = new Hono<AuthEnv>()
     const target = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!target) throw new HTTPException(404, { message: "Игрок не найден" });
     await db.insert(moderation).values({ userId, kind, reason, byId: me.id });
+    await db
+      .update(complaints)
+      .set({ status: "resolved", resolvedAt: nowSec() })
+      .where(and(eq(complaints.aboutId, userId), eq(complaints.status, "open")));
     await audit(me.id, kind === "ban" ? "ban" : "warn", `${target.first} ${target.last}`.trim(), reason);
     await notifyUsers(
       [userId],
@@ -217,6 +244,37 @@ export const metaRoutes = new Hono<AuthEnv>()
     if (!row) throw new HTTPException(404, { message: "Запись не найдена" });
     await db.update(moderation).set({ liftedAt: nowSec() }).where(eq(moderation.id, row.id));
     if (row.kind === "ban") await notifyUsers([row.userId], "✅ Бан снят — запись на игры снова доступна.");
+    return c.json({ ok: true });
+  })
+
+  /* ---------------------------------------------------------- complaints */
+  /** Any player reports another player; moderators see it in Модерация. */
+  .post("/complaints", zValidator("json", complaintSchema), async (c) => {
+    const me = c.get("user");
+    const { userId, gameId, reason } = c.req.valid("json");
+    if (userId === me.id) throw new HTTPException(400, { message: "Нельзя пожаловаться на себя" });
+    const target = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    if (!target) throw new HTTPException(404, { message: "Игрок не найден" });
+    const dupe = await db.query.complaints.findFirst({
+      where: and(eq(complaints.aboutId, userId), eq(complaints.byId, me.id), eq(complaints.status, "open")),
+    });
+    if (dupe) throw new HTTPException(409, { message: "Твоя жалоба на этого игрока уже на рассмотрении" });
+    await db.insert(complaints).values({ aboutId: userId, byId: me.id, gameId, reason });
+    const mods = (await db.query.users.findMany()).filter((u) => u.role !== "player").map((u) => u.id);
+    await notifyUsers(
+      mods,
+      `⚠️ Жалоба на <b>${target.first} ${target.last}</b>: ${reason}`.trim(),
+      "/#/moderation",
+    );
+    return c.json({ ok: true }, 201);
+  })
+
+  /** Moderator dismisses a complaint without action. */
+  .post("/complaints/:id/dismiss", roleRequired("organizer"), idParam, async (c) => {
+    const complaint = await db.query.complaints.findFirst({ where: eq(complaints.id, c.req.valid("param").id) });
+    if (!complaint) throw new HTTPException(404, { message: "Жалоба не найдена" });
+    if (complaint.status !== "open") throw new HTTPException(409, { message: "Жалоба уже рассмотрена" });
+    await db.update(complaints).set({ status: "dismissed", resolvedAt: nowSec() }).where(eq(complaints.id, complaint.id));
     return c.json({ ok: true });
   })
 

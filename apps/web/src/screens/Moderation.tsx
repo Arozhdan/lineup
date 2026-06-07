@@ -24,6 +24,7 @@ export function Moderation() {
   });
 
   const flagged = (modQuery.data?.flagged ?? []) as Flagged[];
+  const complaintList = modQuery.data?.complaints ?? [];
   const actions = modQuery.data?.actions ?? [];
 
   const act = async (userId: number, kind: "warning" | "ban", text: string) => {
@@ -39,6 +40,12 @@ export function Moderation() {
       setBanSheet(null);
     }
   };
+
+  const dismissComplaint = (complaintId: number) =>
+    void run(() => unwrap(api.complaints[":id"].dismiss.$post({ param: { id: String(complaintId) } })), {
+      ok: "Жалоба отклонена",
+      invalidate: [["moderation"]],
+    });
 
   const liftBan = (userId: number) => {
     const ban = actions.find((a) => a.kind === "ban" && !a.liftedAt && a.user?.id === userId);
@@ -58,6 +65,51 @@ export function Moderation() {
         </p>
 
         {modQuery.isPending && <div className="lu-skel" style={{ height: 120, borderRadius: "var(--radius-lg)" }} />}
+
+        {complaintList.length > 0 && (
+          <>
+            <div className="lu-section-label" style={{ paddingLeft: 2 }}>Жалобы · {complaintList.length}</div>
+            {complaintList.map((x) => (
+              <Card pad key={x.id} className="lu-card--accent" style={{ borderLeftColor: "var(--warning)" }}>
+                <div className="lu-row" style={{ gap: 12 }}>
+                  <Avatar name={x.about.name} src={x.about.photoUrl || undefined} size={42} />
+                  <div className="lu-grow">
+                    <div style={{ fontSize: 16, fontWeight: 600 }}>{x.about.name}</div>
+                    <div className="lu-muted">
+                      от {x.by} · {fmtDay(x.createdAt)}
+                      {x.gameTitle ? ` · ${x.gameTitle}` : ""}
+                    </div>
+                  </div>
+                  {x.banned && <Badge variant="danger">бан</Badge>}
+                </div>
+                <p style={{ margin: "10px 0 0", fontSize: 14, color: "var(--text)" }}>«{x.reason}»</p>
+                <div className="lu-row" style={{ marginTop: 12, gap: 8 }}>
+                  <Button size="sm" variant="ghost" className="lu-grow" onClick={() => dismissComplaint(x.id)}>
+                    Отклонить
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="lu-grow"
+                    onClick={() => { setReason(x.reason); setWarnSheet({ ...x.about, reliability: x.reliability, issue: "", sev: "mid", banned: x.banned }); }}
+                  >
+                    Предупредить
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="lu-grow"
+                    leadingIcon={<I.Ban width={14} height={14} />}
+                    onClick={() => { setReason(x.reason); setBanSheet({ ...x.about, reliability: x.reliability, issue: "", sev: "high", banned: x.banned }); }}
+                  >
+                    Бан
+                  </Button>
+                </div>
+              </Card>
+            ))}
+            <div className="lu-section-label" style={{ paddingLeft: 2 }}>Автофлаги</div>
+          </>
+        )}
 
         {flagged.map((p) => (
           <Card pad key={p.id}>
@@ -101,7 +153,7 @@ export function Moderation() {
           </Card>
         ))}
 
-        {!modQuery.isPending && !flagged.length && (
+        {!modQuery.isPending && !flagged.length && !complaintList.length && (
           <EmptyState icon={<I.Shield />} title="Всё спокойно" description="Сейчас нет игроков, требующих внимания." />
         )}
 

@@ -146,6 +146,12 @@ export const payStatusSchema = z.object({
   payMethod: z.enum(PAY_METHODS).nullable().default(null),
 });
 
+export const complaintSchema = z.object({
+  userId: z.number().int().positive(),
+  gameId: z.number().int().positive().nullable().default(null),
+  reason: z.string().trim().min(5, "Опиши, что случилось").max(300),
+});
+
 export const moderationSchema = z.object({
   userId: z.number().int().positive(),
   kind: z.enum(MODERATION_KINDS),

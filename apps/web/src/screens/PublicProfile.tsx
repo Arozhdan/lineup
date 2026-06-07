@@ -1,15 +1,33 @@
 /* 3.9 Публичный профиль. */
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { api, unwrap } from "@/api/client";
-import { useApp } from "@/app/AppContext";
-import { Avatar, Badge, Button, ListItem, ListSection, NavBar, PositionBadge, roleColorOf } from "@/ds";
+import { useAction, useApp } from "@/app/AppContext";
+import { Avatar, Badge, Button, ListItem, ListSection, NavBar, PositionBadge, Sheet, roleColorOf } from "@/ds";
 import { I } from "@/icons";
 
 export function PublicProfile() {
   const navigate = useNavigate();
   const { id = "" } = useParams();
-  const { toast } = useApp();
+  const { toast, me } = useApp();
+  const run = useAction();
+  const [complainOpen, setComplainOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const complain = async () => {
+    setSending(true);
+    const ok = await run(
+      () => unwrap(api.complaints.$post({ json: { userId: Number(id), gameId: null, reason: reason.trim() } })),
+      { ok: "Жалоба отправлена — модераторы её рассмотрят" },
+    );
+    setSending(false);
+    if (ok) {
+      setReason("");
+      setComplainOpen(false);
+    }
+  };
 
   const playerQuery = useQuery({
     queryKey: ["players", id],
@@ -88,9 +106,44 @@ export function PublicProfile() {
             <Button block variant="secondary" leadingIcon={<I.UserPlus width={18} height={18} />} onClick={invite}>
               Позвать в игру
             </Button>
+            {me?.id !== p.id && (
+              <Button
+                block
+                variant="ghost"
+                style={{ color: "var(--danger)" }}
+                leadingIcon={<I.AlertTriangle width={18} height={18} />}
+                onClick={() => setComplainOpen(true)}
+              >
+                Пожаловаться
+              </Button>
+            )}
           </>
         )}
       </div>
+
+      <Sheet open={complainOpen} onClose={() => setComplainOpen(false)} title={p ? `Жалоба на ${p.name}` : "Жалоба"}>
+        <p className="lu-sheet-lede">
+          Опиши, что случилось. Жалобу увидят только модераторы сообщества — игроку она не показывается.
+        </p>
+        <div className="lu-stack" style={{ gap: 12 }}>
+          <div className="lu-field">
+            <label className="lu-field__label">Причина</label>
+            <div className="lu-field__wrap" style={{ alignItems: "stretch", padding: 12 }}>
+              <textarea
+                className="lu-field__input"
+                rows={3}
+                style={{ resize: "none", padding: 0 }}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="напр. грубая игра, оскорбления"
+              />
+            </div>
+          </div>
+          <Button block size="lg" variant="destructive" loading={sending} disabled={reason.trim().length < 5} onClick={() => void complain()}>
+            Отправить жалобу
+          </Button>
+        </div>
+      </Sheet>
     </div>
   );
 }

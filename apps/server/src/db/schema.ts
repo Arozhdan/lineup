@@ -200,6 +200,21 @@ export const moderation = sqliteTable("moderation", {
   createdAt: integer("created_at").notNull().default(now),
 });
 
+export const complaints = sqliteTable(
+  "complaints",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    aboutId: integer("about_id").notNull(),
+    byId: integer("by_id").notNull(),
+    gameId: integer("game_id"),
+    reason: text("reason").notNull(),
+    status: text("status").$type<"open" | "resolved" | "dismissed">().notNull().default("open"),
+    createdAt: integer("created_at").notNull().default(now),
+    resolvedAt: integer("resolved_at"),
+  },
+  (t) => [index("complaints_about").on(t.aboutId)],
+);
+
 export const refunds = sqliteTable("refunds", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   gameId: integer("game_id").notNull(),
