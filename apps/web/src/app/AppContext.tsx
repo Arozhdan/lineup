@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getToken, setToken, unwrap } from "@/api/client";
 import { setCurrency } from "@/lib/format";
 import { I } from "@/icons";
+import { haptic } from "@/lib/telegram";
 
 export type Me = Awaited<ReturnType<typeof fetchMe>>;
 const fetchMe = () => unwrap(api.me.$get());
@@ -69,6 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [qc]);
 
   const toast = useCallback((text: string, kind: "ok" | "error" = "ok") => {
+    haptic(kind === "error" ? "error" : "success");
     const id = ++toastId.current;
     setToasts((t) => [...t, { id, text, kind }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2400);

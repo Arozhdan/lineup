@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter } from "react-router";
 import { App } from "./App";
 import { AppProvider } from "./app/AppContext";
-import { applyTelegramTheme, initTelegram, tg } from "./lib/telegram";
+import { applyTelegramTheme, initHaptics, initTelegram, tg } from "./lib/telegram";
 
 import "./ds/tokens/fonts.css";
 import "./ds/tokens/colors.css";
@@ -20,6 +20,7 @@ import "./ds/app.css";
 
 initTelegram();
 applyTelegramTheme();
+initHaptics();
 tg?.onEvent("themeChanged", applyTelegramTheme);
 
 const queryClient = new QueryClient({

@@ -94,3 +94,21 @@ export function saveFile(url: string, fileName: string): void {
   a.click();
   a.remove();
 }
+
+const TAPPABLE =
+  ".lu-btn, .lu-tab, .lu-chip, .lu-pool-card, .lu-cell--tappable, .lu-seg__opt, " +
+  ".lu-pitch__dot, .lu-switch, .lu-radio, .lu-match--tappable, .lu-action, .lu-vote, " +
+  ".lu-iconbtn, .lu-tally-btn, .lu-mode-card, .lu-navbar__btn, .lu-stepper button";
+
+/** One delegated listener: light impact on every tappable control. */
+export function initHaptics(): void {
+  if (!tg) return;
+  document.addEventListener(
+    "click",
+    (e) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest(TAPPABLE)) haptic("tap");
+    },
+    { capture: true, passive: true },
+  );
+}
