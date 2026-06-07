@@ -1,17 +1,21 @@
 /* 5.4 Итог матча. */
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { api, unwrap } from "@/api/client";
-import { useApp } from "@/app/AppContext";
-import { Avatar, Badge, Button, Card, ListItem, ListSection, NavBar, roleColorOf } from "@/ds";
+import { useAction, useApp } from "@/app/AppContext";
+import { Avatar, Badge, Button, Card, ListItem, ListSection, NavBar, PositionBadge, Sheet, roleColorOf } from "@/ds";
 import { I } from "@/icons";
 import { fmtDay } from "@/lib/format";
 import { TEAM_NAME } from "@lineup/shared";
+
+type Participant = { id: number; name: string; photoUrl: string; position: string | null };
 
 export function Result() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { isOrganizer } = useApp();
+  const run = useAction();
 
   const resultQuery = useQuery({
     queryKey: ["result", id],
@@ -19,6 +23,36 @@ export function Result() {
     enabled: !!id,
   });
   const r = resultQuery.data;
+
+  // Participants minus me — the same list MVP voting uses.
+  const participantsQuery = useQuery({
+    queryKey: ["mvp", id],
+    queryFn: () => unwrap(api.games[":id"].mvp.$get({ param: { id: String(id) } })),
+    enabled: !!id,
+  });
+  const participants: Participant[] = participantsQuery.data?.nominees ?? [];
+
+  const [complainOpen, setComplainOpen] = useState(false);
+  const [target, setTarget] = useState<Participant | null>(null);
+  const [reason, setReason] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const closeComplain = () => {
+    setComplainOpen(false);
+    setTarget(null);
+    setReason("");
+  };
+
+  const complain = async () => {
+    if (!target) return;
+    setSending(true);
+    const ok = await run(
+      () => unwrap(api.complaints.$post({ json: { userId: target.id, gameId: Number(id), reason: reason.trim() } })),
+      { ok: "Жалоба отправлена — модераторы её рассмотрят" },
+    );
+    setSending(false);
+    if (ok) closeComplain();
+  };
 
   const win = r ? (r.scoreA > r.scoreB ? "a" : r.scoreB > r.scoreA ? "b" : null) : null;
   const winLabel = win ? `${TEAM_NAME[win]} победили` : "Ничья";
@@ -72,6 +106,7 @@ export function Result() {
                     title={p.name}
                     subtitle={statSub(p.goals, p.assists)}
                     trailing={<Badge variant="success">⚽ {p.goals}</Badge>}
+                    onClick={() => navigate(`/player/${p.id}`)}
                   />
                 ))}
               </ListSection>
@@ -99,11 +134,69 @@ export function Result() {
                   Сверка оплат
                 </Button>
               )}
+              {participants.length > 0 && (
+                <Button
+                  block
+                  variant="ghost"
+                  style={{ color: "var(--danger)" }}
+                  leadingIcon={<I.AlertTriangle width={16} height={16} />}
+                  onClick={() => setComplainOpen(true)}
+                >
+                  Пожаловаться на игрока
+                </Button>
+              )}
               <p className="lu-note lu-center">Очки начислены автоматически · окно правок 24 ч.</p>
             </div>
           </>
         )}
       </div>
+
+      <Sheet
+        open={complainOpen}
+        onClose={closeComplain}
+        title={target ? `Жалоба на ${target.name}` : "На кого жалоба?"}
+      >
+        {!target ? (
+          <div className="lu-pool">
+            {participants.map((p) => (
+              <button key={p.id} className="lu-pool-card" onClick={() => setTarget(p)}>
+                <Avatar name={p.name} src={p.photoUrl || undefined} size={36} />
+                <span className="lu-grow" style={{ fontSize: 15, color: "var(--text)" }}>
+                  {p.name}
+                </span>
+                {p.position && <PositionBadge code={p.position} />}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            <p className="lu-sheet-lede">
+              Жалоба привяжется к матчу «{r?.title}». Её увидят только модераторы — игроку она не показывается.
+            </p>
+            <div className="lu-stack" style={{ gap: 12 }}>
+              <div className="lu-field">
+                <label className="lu-field__label">Причина</label>
+                <div className="lu-field__wrap" style={{ alignItems: "stretch", padding: 12 }}>
+                  <textarea
+                    className="lu-field__input"
+                    rows={3}
+                    style={{ resize: "none", padding: 0 }}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="напр. грубая игра, оскорбления"
+                  />
+                </div>
+              </div>
+              <Button block size="lg" variant="destructive" loading={sending} disabled={reason.trim().length < 5} onClick={() => void complain()}>
+                Отправить жалобу
+              </Button>
+              <Button block variant="ghost" onClick={() => setTarget(null)}>
+                Выбрать другого игрока
+              </Button>
+            </div>
+          </>
+        )}
+      </Sheet>
     </div>
   );
 }
