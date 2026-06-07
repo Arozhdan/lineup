@@ -87,6 +87,14 @@ export function Tools() {
             chevron
             onClick={() => navigate("/schedule")}
           />
+          <ListItem
+            icon={<I.Users width={16} height={16} />}
+            iconColor="#8B5CF6"
+            title="Группы и аудитории"
+            subtitle="приватные игры для своих"
+            chevron
+            onClick={() => navigate("/groups")}
+          />
         </ListSection>
         {isOwner ? (
           <ListSection label="Платформа · только владелец">
