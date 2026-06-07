@@ -283,21 +283,22 @@ export function CreateGame() {
               leadingIcon={<I.Coins width={16} height={16} />}
               inputMode="numeric"
             />
-            <div className="lu-field">
-              <label className="lu-field__label">Заметки</label>
-              <div className="lu-field__wrap" style={{ alignItems: "stretch", padding: 12 }}>
-                <textarea
-                  className="lu-field__input"
-                  rows={3}
-                  style={{ resize: "none", padding: 0 }}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Свободная игра, делимся на месте. Приходи как удобно."
-                />
-              </div>
-            </div>
           </>
         )}
+
+        <div className="lu-field">
+          <label className="lu-field__label">Описание · опционально</label>
+          <div className="lu-field__wrap" style={{ alignItems: "stretch", padding: 12 }}>
+            <textarea
+              className="lu-field__input"
+              rows={3}
+              style={{ resize: "none", padding: 0 }}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Что взять с собой, как пройти на поле, формат вечера…"
+            />
+          </div>
+        </div>
 
         {groupList.length > 0 && (
           <div>

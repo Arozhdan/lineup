@@ -28,7 +28,8 @@ export function Manage() {
   const run = useAction();
 
   const [tab, setTab] = useState<"confirmed" | "waitlist" | "pending">("confirmed");
-  const [sheet, setSheet] = useState<null | "more" | "cancel" | "reschedule" | "visibility">(null);
+  const [sheet, setSheet] = useState<null | "more" | "cancel" | "reschedule" | "visibility" | "notes">(null);
+  const [notesDraft, setNotesDraft] = useState("");
   const [visDraft, setVisDraft] = useState<number[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -288,6 +289,16 @@ export function Manage() {
               onClick={openReschedule}
             />
             <ListItemRow
+              icon={<I.Note width={16} height={16} />}
+              iconColor="var(--info)"
+              title="Описание"
+              subtitle={g?.notes ? g.notes.slice(0, 40) : "добавить текст для игроков"}
+              onClick={() => {
+                setNotesDraft(g?.notes ?? "");
+                setSheet("notes");
+              }}
+            />
+            <ListItemRow
               icon={<I.Lock width={16} height={16} />}
               iconColor="var(--accent)"
               title="Видимость"
@@ -304,6 +315,37 @@ export function Manage() {
       </Sheet>
 
       {/* reschedule sheet */}
+      <Sheet open={sheet === "notes"} onClose={() => setSheet(null)} title="Описание игры">
+        {sheet === "notes" && (
+          <div className="lu-stack" style={{ gap: 12 }}>
+            <div className="lu-field">
+              <div className="lu-field__wrap" style={{ alignItems: "stretch", padding: 12 }}>
+                <textarea
+                  className="lu-field__input"
+                  rows={4}
+                  style={{ resize: "none", padding: 0 }}
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  placeholder="Что взять с собой, как пройти на поле…"
+                />
+              </div>
+            </div>
+            <Button
+              block
+              size="lg"
+              onClick={() =>
+                void run(
+                  () => unwrap(api.games[":id"].$patch({ param: { id: String(id) }, json: { notes: notesDraft.trim() } })),
+                  { ok: "Описание сохранено", invalidate },
+                ).then(() => setSheet(null))
+              }
+            >
+              Сохранить
+            </Button>
+          </div>
+        )}
+      </Sheet>
+
       <Sheet open={sheet === "visibility"} onClose={() => setSheet(null)} title="Кому видна игра">
         {sheet === "visibility" && (
           <>

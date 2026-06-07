@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { api, unwrap } from "@/api/client";
 import { useAction, useApp } from "@/app/AppContext";
-import { Avatar, Button, ListItem, ListSection, NavBar, PositionBadge } from "@/ds";
+import { Avatar, Button, Card, ListItem, ListSection, NavBar, PositionBadge } from "@/ds";
 import { KeyFact } from "@/ds/extras";
 import { I } from "@/icons";
 import { fmtCaps, fmtMoney, fmtWhen } from "@/lib/format";
@@ -232,6 +232,13 @@ function GameBody({
           <I.Users width={18} height={18} />
           Ты в листе ожидания · сообщим, когда место освободится
         </div>
+      )}
+
+      {g.notes && (
+        <Card pad>
+          <div className="lu-section-label" style={{ marginBottom: 6 }}>От организатора</div>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.45, color: "var(--text)", whiteSpace: "pre-wrap" }}>{g.notes}</p>
+        </Card>
       )}
 
       {g.kind === "meetup" ? (
