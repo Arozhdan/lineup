@@ -5,7 +5,10 @@ import { api, unwrap } from "@/api/client";
 import { useAction } from "@/app/AppContext";
 import { Avatar, Button, Card, EmptyState, NavBar } from "@/ds";
 import { roleColorOf } from "@/ds";
+import { relColor } from "@/ds/extras";
 import { I } from "@/icons";
+import { plural } from "@/lib/format";
+import { LEVEL_LABEL } from "@lineup/shared";
 
 export function Approve() {
   const { id = "" } = useParams();
@@ -45,7 +48,7 @@ export function Approve() {
       <NavBar title="Заявки" onBack={() => navigate(-1)} backLabel="Состав" />
       <div className="lu-scr__body">
         <p className="lu-lede" style={{ padding: "0 2px" }}>
-          Игра с ручным одобрением. Просмотри заявки — уровень и позиция помогут принять решение.
+          Игра с ручным одобрением. Просмотри заявки — надёжность, рейтинг и уровень помогут принять решение.
         </p>
         {g && !list.length && <EmptyState icon={<I.Inbox />} title="Заявок нет" description="Новые заявки появятся здесь." />}
         {list.map((p) => (
@@ -61,8 +64,13 @@ export function Approve() {
               <div className="lu-grow">
                 <div style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</div>
                 <div className="lu-muted">
-                  {p.waitlisted ? "лист ожидания · " : ""}уровень {p.level}
-                  {p.position ? ` · позиция ${p.position}` : ""}
+                  {p.waitlisted ? "лист ожидания · " : ""}
+                  <span style={{ color: relColor(p.reliability), fontWeight: 600 }}>надёжность {p.reliability}%</span>
+                  {" · "}{p.points} {plural(p.points, "очко", "очка", "очков")}
+                  {p.position ? ` · ${p.position}` : ""}
+                </div>
+                <div className="lu-muted" style={{ fontSize: 12 }}>
+                  уровень {p.level} — {LEVEL_LABEL[p.level] ?? "Средний"} (самооценка)
                 </div>
               </div>
             </div>

@@ -5,9 +5,10 @@ import { useNavigate, useParams } from "react-router";
 import { api, unwrap } from "@/api/client";
 import { useAction, useApp } from "@/app/AppContext";
 import { Avatar, Button, Card, EmptyState, Input, NavBar, PositionBadge, Sheet } from "@/ds";
+import { relColor } from "@/ds/extras";
 import { I } from "@/icons";
-import { fmtDay, fmtTime } from "@/lib/format";
-import { PAY_STATUS_LABEL, type PayStatus } from "@lineup/shared";
+import { fmtDay, fmtTime, plural } from "@/lib/format";
+import { LEVEL_LABEL, PAY_STATUS_LABEL, type PayStatus } from "@lineup/shared";
 
 type Detail = Awaited<ReturnType<typeof unwrap<ReturnType<(typeof api.games)[":id"]["$get"]>>>>;
 type RosterRow = Detail["roster"][number];
@@ -236,7 +237,10 @@ export function Manage() {
                       <Avatar name={p.name} src={p.photoUrl || undefined} size={36} />
                       <span className="lu-grow">
                         <span style={{ display: "block", fontSize: 15, color: "var(--text)" }}>{p.name}</span>
-                        <span style={{ fontSize: 12, color: "var(--text-hint)" }}>уровень {p.level}</span>
+                        <span style={{ fontSize: 12, color: "var(--text-hint)" }}>
+                          <span style={{ color: relColor(p.reliability), fontWeight: 600 }}>надёжность {p.reliability}%</span>
+                          {" · "}{p.points} {plural(p.points, "очко", "очка", "очков")} · ур. {p.level} ({LEVEL_LABEL[p.level] ?? "Средний"})
+                        </span>
                       </span>
                       <button className="lu-iconbtn lu-iconbtn--fill" style={{ color: "var(--danger)" }} onClick={() => approve(p.id, false)}>
                         <I.X width={18} height={18} />

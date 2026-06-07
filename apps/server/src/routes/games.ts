@@ -11,6 +11,7 @@ import { games, gameStats, mvpVotes, refunds, seasons, settings, signups, users,
 import { audit } from "../lib/audit.js";
 import { fmtDateTime } from "../lib/dates.js";
 import { gameCard, nowSec, publicUser } from "../lib/serialize.js";
+import { activeSeasonData } from "../lib/season.js";
 import { mvpWinners } from "../lib/stats.js";
 
 const idParam = zValidator("param", z.object({ id: z.coerce.number().int().positive() }));
@@ -105,6 +106,8 @@ export const gamesRoutes = new Hono<AuthEnv>()
     const players = userIds.length ? await db.query.users.findMany({ where: inArray(users.id, userIds) }) : [];
     const byId = new Map(players.map((u) => [u.id, u]));
     const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
+    // Season rating (points) + attendance reliability for roster/approval rows.
+    const { aggregates, reliability } = await activeSeasonData();
 
     const row = (s: (typeof all)[number]) => ({
       ...publicUser(byId.get(s.userId)!),
@@ -115,6 +118,8 @@ export const gamesRoutes = new Hono<AuthEnv>()
       checkedIn: s.checkedIn,
       team: s.team,
       signupId: s.id,
+      points: aggregates.get(s.userId)?.points ?? 0,
+      reliability: reliability.get(s.userId)?.reliability ?? 100,
     });
 
     const active = all.filter((s) => s.status !== "cancelled");
