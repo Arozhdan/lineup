@@ -11,6 +11,7 @@ import { moderation, refunds, settings, signups, users, type Game, type Signup }
 import { filledCount, gameCapacity, nowSec } from "../lib/serialize.js";
 import { canSeeGame, myGroupIds } from "../lib/visibility.js";
 import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import { signQr } from "./payqr.js";
 import QRCode from "qrcode";
 import { loadGame } from "./games.js";
 
@@ -152,7 +153,7 @@ export const signupRoutes = new Hono<AuthEnv>()
       where: and(eq(signups.gameId, game.id), eq(signups.userId, me.id)),
     });
     const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
-    if (!cfg || !looksLikeIban(cfg.qrAccount)) return c.json({ dataUrl: null, amount: 0 });
+    if (!cfg || !looksLikeIban(cfg.qrAccount)) return c.json({ dataUrl: null, amount: 0, downloadUrl: null });
     const amount =
       mine?.payStatus === "partial" ? Math.round(game.price / 2) : game.price * (1 + (mine?.guests ?? 0));
     const payload = buildSpd({
@@ -164,7 +165,8 @@ export const signupRoutes = new Hono<AuthEnv>()
       vs: game.id,
     });
     const dataUrl = await QRCode.toDataURL(payload, { width: 512, margin: 2 });
-    return c.json({ dataUrl, amount });
+    const downloadUrl = `/api/games/${game.id}/payqr.png?u=${me.id}&sig=${signQr(`game:${game.id}:${me.id}`)}`;
+    return c.json({ dataUrl, amount, downloadUrl });
   })
 
   /** "Я оплатил" — player marks the QR transfer as done. */

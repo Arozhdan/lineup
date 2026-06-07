@@ -7,6 +7,7 @@ import { gamesRoutes } from "./routes/games.js";
 import { liveRoutes } from "./routes/live.js";
 import { metaRoutes } from "./routes/meta.js";
 import { moneyRoutes } from "./routes/money.js";
+import { payqrPublic } from "./routes/payqr.js";
 import { photoRoutes } from "./routes/photos.js";
 import { profileRoutes } from "./routes/profile.js";
 import { settingsRoutes } from "./routes/settings.js";
@@ -14,6 +15,8 @@ import { signupRoutes } from "./routes/signups.js";
 import { teamRoutes } from "./routes/teams.js";
 
 export const api = new Hono()
+  // Signature-guarded public PNGs must precede routers with router-wide auth.
+  .route("/", payqrPublic)
   .route("/auth", authRoutes)
   .route("/", profileRoutes)
   .route("/groups", groupRoutes)

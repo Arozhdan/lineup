@@ -8,6 +8,7 @@ import { Button, NavBar } from "@/ds";
 import { QrBox } from "@/ds/extras";
 import { I } from "@/icons";
 import { fmtClock, fmtDeadline, fmtMoney } from "@/lib/format";
+import { saveFile } from "@/lib/telegram";
 import { fetchGameDetail } from "./GameDetail";
 
 export function Pay() {
@@ -143,9 +144,22 @@ export function Pay() {
             </div>
           )}
         </div>
-        <Button block variant="secondary" leadingIcon={<I.Copy width={18} height={18} />} onClick={copyDetails}>
-          Скопировать реквизиты
-        </Button>
+        <div className="lu-form-grid">
+          <Button
+            variant="secondary"
+            leadingIcon={<I.Download width={16} height={16} />}
+            disabled={!payqrQuery.data?.downloadUrl && !cfg.qrImage}
+            onClick={() => saveFile(payqrQuery.data?.downloadUrl ?? cfg.qrImage, "qr-platba.png")}
+          >
+            Скачать QR
+          </Button>
+          <Button variant="secondary" leadingIcon={<I.Copy width={16} height={16} />} onClick={copyDetails}>
+            Реквизиты
+          </Button>
+        </div>
+        <p className="lu-note lu-center" style={{ marginTop: -6 }}>
+          Сохрани QR в галерею и выбери его в приложении банка — сканировать с этого же экрана не получится.
+        </p>
         <p className="lu-note lu-center">
           Если отменишь до дедлайна — организатор вернёт взнос ({fmtDeadline(g.deadlineAt)}).
         </p>

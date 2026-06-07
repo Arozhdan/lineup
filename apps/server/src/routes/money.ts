@@ -6,9 +6,12 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { payStatusSchema } from "@lineup/shared";
 import { authRequired, roleRequired, type AuthEnv } from "../auth.js";
 import { notifyUsers } from "../bot.js";
+import QRCode from "qrcode";
 import { db } from "../db/client.js";
-import { games, refunds, signups, users, venues, type Signup } from "../db/schema.js";
+import { games, refunds, settings, signups, users, venues, type Signup } from "../db/schema.js";
 import { audit } from "../lib/audit.js";
+import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import { signQr } from "./payqr.js";
 import { nowSec, publicUser } from "../lib/serialize.js";
 import { loadGame } from "./games.js";
 
@@ -217,5 +220,22 @@ export const moneyRoutes = new Hono<AuthEnv>()
       })
       .filter((x): x is NonNullable<typeof x> => !!x);
     const debt = items.reduce((sum, x) => sum + (x.payStatus === "marked" ? 0 : x.owed), 0);
-    return c.json({ debt, items });
+
+    // Personal QR Platba for the total debt — shown and downloadable in the sheet.
+    const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
+    let debtQr: { dataUrl: string; downloadUrl: string } | null = null;
+    if (debt > 0 && cfg && looksLikeIban(cfg.qrAccount)) {
+      const payload = buildSpd({
+        iban: cfg.qrAccount,
+        recipient: cfg.qrRecipient || cfg.name,
+        amount: debt,
+        currency: cfg.currency,
+        message: `Взносы · ${cfg.name}`,
+      });
+      debtQr = {
+        dataUrl: await QRCode.toDataURL(payload, { width: 512, margin: 2 }),
+        downloadUrl: `/api/money/debtqr.png?u=${me.id}&sig=${signQr(`debt:${me.id}`)}`,
+      };
+    }
+    return c.json({ debt, items, debtQr });
   });

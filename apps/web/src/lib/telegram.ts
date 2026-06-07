@@ -29,6 +29,8 @@ export type TelegramWebApp = {
   onEvent(event: string, cb: () => void): void;
   offEvent(event: string, cb: () => void): void;
   openTelegramLink(url: string): void;
+  /** Bot API 8.0+: native "save file" prompt inside Telegram. */
+  downloadFile?(params: { url: string; file_name: string }, callback?: (accepted: boolean) => void): void;
   setHeaderColor?(color: string): void;
   setBackgroundColor?(color: string): void;
   disableVerticalSwipes?(): void;
@@ -75,4 +77,20 @@ export function applyTelegramTheme(): "light" | "dark" {
 export function setTheme(scheme: "light" | "dark"): void {
   localStorage.setItem("lu_theme", scheme);
   applyTelegramTheme();
+}
+
+/** Save a file to the device: native Telegram prompt when available,
+    plain browser download otherwise. `url` may be relative. */
+export function saveFile(url: string, fileName: string): void {
+  const abs = url.startsWith("http") ? url : `${window.location.origin}${url}`;
+  if (tg?.downloadFile) {
+    tg.downloadFile({ url: abs, file_name: fileName });
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = abs;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }

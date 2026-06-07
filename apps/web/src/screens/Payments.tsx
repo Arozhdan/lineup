@@ -7,6 +7,7 @@ import { useAction } from "@/app/AppContext";
 import { Button, Card, ListItem, ListSection, NavBar, Sheet } from "@/ds";
 import { QrBox } from "@/ds/extras";
 import { I } from "@/icons";
+import { saveFile } from "@/lib/telegram";
 import { fmtDay, fmtMoney } from "@/lib/format";
 
 export function Payments() {
