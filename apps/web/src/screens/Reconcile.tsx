@@ -187,8 +187,8 @@ export function Reconcile() {
         {sheet && (
           <>
             <p className="lu-sheet-lede">Взнос {fmtMoney(sheet.fee)}. Отметь, как игрок рассчитался.</p>
-            {sheet.owed > 0 && (
-              <ListSection style={{ marginBottom: 10 }}>
+            <ListSection>
+              {sheet.owed > 0 && (
                 <ListItem
                   icon={<I.Bell width={16} height={16} />}
                   iconColor="var(--info)"
@@ -197,9 +197,7 @@ export function Reconcile() {
                   chevron
                   onClick={() => void remindOne(sheet.id, sheet.name)}
                 />
-              </ListSection>
-            )}
-            <ListSection>
+              )}
               <ListItem
                 icon={<I.QrCode width={16} height={16} />}
                 iconColor="var(--accent)"
