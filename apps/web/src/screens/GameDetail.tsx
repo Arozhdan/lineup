@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { api, unwrap } from "@/api/client";
-import { useApp } from "@/app/AppContext";
+import { useAction, useApp } from "@/app/AppContext";
 import { Avatar, Button, ListItem, ListSection, NavBar, PositionBadge } from "@/ds";
 import { KeyFact } from "@/ds/extras";
 import { I } from "@/icons";
@@ -17,7 +17,9 @@ export function GameDetail() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { isOrganizer, toast } = useApp();
+  const run = useAction();
   const [expanded, setExpanded] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const gameQuery = useQuery({
     queryKey: ["game", id],
@@ -35,7 +37,7 @@ export function GameDetail() {
     <div className="lu-scr">
       <NavBar
         title="Игра"
-        onBack={() => navigate(-1)}
+        onBack={() => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate("/", { replace: true }))}
         backLabel="Игры"
         trailing={
           <button className="lu-iconbtn" onClick={share}>
@@ -70,8 +72,20 @@ export function GameDetail() {
               Я записан · управлять
             </Button>
           ) : g.my?.status === "pending" ? (
-            <Button block size="lg" disabled>
-              Заявка на рассмотрении
+            <Button
+              block
+              size="lg"
+              variant="secondary"
+              loading={withdrawing}
+              onClick={() => {
+                setWithdrawing(true);
+                void run(
+                  () => unwrap(api.games[":id"].signup.cancel.$post({ param: { id: String(id) } })),
+                  { ok: "Заявка отозвана", invalidate: [["game", id], ["games"]] },
+                ).finally(() => setWithdrawing(false));
+              }}
+            >
+              Отозвать заявку
             </Button>
           ) : g.my?.status === "waitlist" ? (
             <Button block size="lg" variant="secondary" onClick={() => navigate(`/game/${id}/waitlist`)}>
@@ -155,6 +169,18 @@ function GameBody({
         <div className="lu-youin-banner">
           <I.CheckCircle width={18} height={18} />
           Ты в составе · позиция {g.my.position}
+        </div>
+      )}
+      {g.my?.status === "pending" && (
+        <div className="lu-youin-banner lu-youin-banner--pending">
+          <I.Clock width={18} height={18} />
+          Заявка отправлена · ждёт одобрения организатора
+        </div>
+      )}
+      {g.my?.status === "waitlist" && (
+        <div className="lu-youin-banner lu-youin-banner--waitlist">
+          <I.Users width={18} height={18} />
+          Ты в листе ожидания · сообщим, когда место освободится
         </div>
       )}
 

@@ -117,8 +117,8 @@ export function Manage() {
       <NavBar
         title="Управление игрой"
         subtitle={g ? `${g.title} · ${fmtDay(g.startsAt)}` : undefined}
-        onBack={() => navigate(`/game/${id}`)}
-        backLabel="Игра"
+        onBack={() => navigate("/")}
+        backLabel="Игры"
         trailing={
           <button className="lu-iconbtn" onClick={() => setSheet("more")}>
             <I.Settings width={20} height={20} />

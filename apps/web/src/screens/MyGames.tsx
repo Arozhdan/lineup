@@ -6,12 +6,7 @@ import { api, unwrap } from "@/api/client";
 import { Badge, Button, Card, EmptyState, NavBar, SegmentedControl } from "@/ds";
 import { MatchCardRU } from "@/ds/extras";
 import { I } from "@/icons";
-import { fmtCaps, fmtDay } from "@/lib/format";
-
-const MY_STATUS_NOTE: Record<string, string> = {
-  pending: "заявка на рассмотрении",
-  waitlist: "в листе ожидания",
-};
+import { fmtCaps, fmtDay, fmtMoney } from "@/lib/format";
 
 export function MyGames() {
   const navigate = useNavigate();
@@ -45,30 +40,22 @@ export function MyGames() {
         {seg === "upcoming" ? (
           mine.length ? (
             <div className="lu-stack">
-              {mine.map((g) => {
-                const note = g.myStatus ? MY_STATUS_NOTE[g.myStatus] : undefined;
-                return (
-                  <div key={g.id}>
-                    <MatchCardRU
-                      title={g.title}
-                      caps={fmtCaps(g.startsAt)}
-                      venue={g.venueShort}
-                      format={g.format}
-                      filled={g.filled}
-                      total={g.capacity}
-                      price={g.price}
-                      status={g.status}
-                      youIn={g.myStatus === "confirmed"}
-                      onClick={() => navigate(`/game/${g.id}`)}
-                    />
-                    {note && (
-                      <p className="lu-note" style={{ paddingLeft: 2, marginTop: 4 }}>
-                        {note}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+              {mine.map((g) => (
+                <MatchCardRU
+                  key={g.id}
+                  title={g.title}
+                  caps={fmtCaps(g.startsAt)}
+                  venue={g.venueShort}
+                  format={g.format}
+                  filled={g.filled}
+                  total={g.capacity}
+                  price={g.price}
+                  priceLabel={fmtMoney(g.price)}
+                  status={g.status}
+                  myStatus={g.myStatus}
+                  onClick={() => navigate(`/game/${g.id}`)}
+                />
+              ))}
               <p className="lu-note lu-center">Напомним за 2 часа до начала · чек-ин откроется на поле.</p>
             </div>
           ) : (

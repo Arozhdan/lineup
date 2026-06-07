@@ -27,7 +27,7 @@ export function Result() {
 
   return (
     <div className="lu-scr">
-      <NavBar title="Итог матча" onBack={() => navigate(-1)} backLabel="Назад" />
+      <NavBar title="Итог матча" onBack={() => navigate("/")} backLabel="Готово" />
       <div className="lu-scr__body">
         {r && (
           <>

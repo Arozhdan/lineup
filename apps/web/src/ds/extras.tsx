@@ -159,6 +159,13 @@ const MC_STATUS: Record<string, { label: string; bg: string; fg: string; bar: st
   cancelled: { label: "Отменена", bg: "var(--danger-soft)", fg: "#C42B22", bar: "var(--gray-400)" },
 };
 
+/** My relationship to the game, rendered as an explicit chip in the footer. */
+const MY_CHIP: Record<string, { label: string; cls: string }> = {
+  confirmed: { label: "Вы в составе", cls: "lu-match__you" },
+  pending: { label: "Заявка на рассмотрении", cls: "lu-match__you lu-match__you--pending" },
+  waitlist: { label: "В листе ожидания", cls: "lu-match__you lu-match__you--waitlist" },
+};
+
 export function MatchCardRU({
   title,
   caps,
@@ -171,6 +178,7 @@ export function MatchCardRU({
   status = "open",
   score,
   youIn = false,
+  myStatus,
   onClick,
 }: {
   title: ReactNode;
@@ -184,20 +192,33 @@ export function MatchCardRU({
   status?: GameStatus | string;
   score?: ReactNode;
   youIn?: boolean;
+  /** "confirmed" | "pending" | "waitlist" — overrides youIn with an explicit chip. */
+  myStatus?: string | null;
   onClick?: () => void;
 }) {
   const st = MC_STATUS[status] ?? MC_STATUS.open!;
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   const left = Math.max(0, total - filled);
+  const my = myStatus ?? (youIn ? "confirmed" : "");
+  // My relationship to the game replaces the generic status pill in the top
+  // row — the footer keeps the full-width progress bar (no layout squeeze).
+  const myChip = status !== "done" && status !== "cancelled" && status !== "live" ? MY_CHIP[my] : undefined;
   const Tag = (onClick ? "button" : "div") as "button";
   return (
     <Tag className={`lu-match${onClick ? " lu-match--tappable" : ""}`} onClick={onClick} type={onClick ? "button" : undefined}>
       <div className="lu-match__top">
         <span className="lu-match__when">{caps}</span>
-        <span className="lu-match__status" style={{ background: st.bg, color: st.fg }}>
-          {status === "live" && <span className="lu-match__live-dot" />}
-          {st.label}
-        </span>
+        {myChip ? (
+          <span className={myChip.cls}>
+            {my === "pending" ? <I.Clock width={12} height={12} /> : my === "waitlist" ? <I.Users width={12} height={12} /> : <I.Check width={12} height={12} />}{" "}
+            {myChip.label}
+          </span>
+        ) : (
+          <span className="lu-match__status" style={{ background: st.bg, color: st.fg }}>
+            {status === "live" && <span className="lu-match__live-dot" />}
+            {st.label}
+          </span>
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <span className="lu-match__title">{title}</span>
@@ -230,15 +251,9 @@ export function MatchCardRU({
           <div className="lu-match__bar">
             <div className="lu-match__fill" style={{ width: `${pct}%`, background: st.bar }} />
           </div>
-          {youIn ? (
-            <span className="lu-match__you">
-              <I.Check width={12} height={12} /> Вы в составе
-            </span>
-          ) : (
-            <span className="lu-match__count">
-              <b>{filled}</b>/{total} · {left === 0 ? "мест нет" : `ещё ${left}`}
-            </span>
-          )}
+          <span className="lu-match__count">
+            <b>{filled}</b>/{total} · {left === 0 ? "мест нет" : `ещё ${left}`}
+          </span>
         </div>
       )}
     </Tag>

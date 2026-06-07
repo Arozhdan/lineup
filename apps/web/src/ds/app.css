@@ -135,6 +135,10 @@ body { overscroll-behavior: none; }
   font-weight: 600; font-size: 14px;
 }
 [data-theme="dark"] .lu-youin-banner { color: #5fe39a; }
+.lu-youin-banner--pending { background: var(--warning-soft); color: #9A6400; }
+[data-theme="dark"] .lu-youin-banner--pending { color: #f0b455; }
+.lu-youin-banner--waitlist { background: var(--info-soft); color: #1F6FBF; }
+[data-theme="dark"] .lu-youin-banner--waitlist { color: #7cbcf5; }
 
 /* sheet bits */
 .lu-sheet-lede { margin: 0 0 14px; color: var(--text-secondary); font-size: 15px; }
@@ -386,6 +390,10 @@ body { overscroll-behavior: none; }
 .lu-match__count b { font-family: var(--font-display); color: var(--text); }
 .lu-match__you { font-size: 12px; font-weight: 700; color: var(--green-700); background: var(--success-soft); padding: 3px 8px; border-radius: var(--radius-full); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 [data-theme="dark"] .lu-match__you { color: #5fe39a; }
+.lu-match__you--pending { color: #9A6400; background: var(--warning-soft); }
+[data-theme="dark"] .lu-match__you--pending { color: #f0b455; }
+.lu-match__you--waitlist { color: #1F6FBF; background: var(--info-soft); }
+[data-theme="dark"] .lu-match__you--waitlist { color: #7cbcf5; }
 .lu-match__score { font-family: var(--font-display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; flex: none; }
 
 /* localized pitch legend */

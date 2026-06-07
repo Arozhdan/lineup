@@ -81,7 +81,7 @@ export function GamesFeed() {
               price={g.price}
               priceLabel={fmtMoney(g.price)}
               status={g.status}
-              youIn={g.youIn}
+              myStatus={g.myStatus}
               onClick={() => navigate(`/game/${g.id}`)}
             />
           ))}
