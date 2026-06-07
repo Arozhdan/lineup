@@ -106,12 +106,21 @@ export function Payments() {
           сверке.
         </p>
         <div className="lu-qrbox" style={{ marginBottom: 16 }}>
-          <QrBox src={settings?.qrImage} />
+          <QrBox src={paymentsQuery.data?.debtQr?.dataUrl ?? settings?.qrImage} />
           <p className="lu-note lu-center" style={{ padding: 0 }}>
-            QR сообщества «{settings?.name ?? "Lineup"}» · {fmtMoney(debt)}
+            {paymentsQuery.data?.debtQr ? `QR Platba на ${fmtMoney(debt)}` : `QR сообщества «${settings?.name ?? "Lineup"}» · ${fmtMoney(debt)}`}
           </p>
         </div>
         <div className="lu-stack lu-stack--sm">
+          <Button
+            block
+            variant="secondary"
+            leadingIcon={<I.Download width={18} height={18} />}
+            disabled={!paymentsQuery.data?.debtQr?.downloadUrl && !settings?.qrImage}
+            onClick={() => saveFile(paymentsQuery.data?.debtQr?.downloadUrl ?? settings?.qrImage ?? "", "qr-platba.png")}
+          >
+            Скачать QR в галерею
+          </Button>
           <Button block size="lg" loading={paying} leadingIcon={<I.Bell width={18} height={18} />} onClick={remindAll}>
             Я оплатил — напомнить организатору
           </Button>
