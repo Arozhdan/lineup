@@ -54,6 +54,17 @@ export function Reconcile() {
     setSheet(null);
   };
 
+  const remindOne = async (userId: number, name: string) => {
+    await run(
+      async () => {
+        const res = await unwrap(api.money.games[":id"].remind.$post({ param: { id }, json: { userId } }));
+        toast(res.sent ? `Напоминание отправлено: ${name}` : `${name} не открывал бота — напоминание не доставлено`);
+      },
+      { invalidate: [] },
+    );
+    setSheet(null);
+  };
+
   const remind = async () => {
     setReminding(true);
     await run(
@@ -176,6 +187,18 @@ export function Reconcile() {
         {sheet && (
           <>
             <p className="lu-sheet-lede">Взнос {fmtMoney(sheet.fee)}. Отметь, как игрок рассчитался.</p>
+            {sheet.owed > 0 && (
+              <ListSection style={{ marginBottom: 10 }}>
+                <ListItem
+                  icon={<I.Bell width={16} height={16} />}
+                  iconColor="var(--info)"
+                  title="Напомнить об оплате"
+                  subtitle={`бот напишет игроку · долг ${fmtMoney(sheet.owed)}`}
+                  chevron
+                  onClick={() => void remindOne(sheet.id, sheet.name)}
+                />
+              </ListSection>
+            )}
             <ListSection>
               <ListItem
                 icon={<I.QrCode width={16} height={16} />}

@@ -84,6 +84,30 @@ export const moneyRoutes = new Hono<AuthEnv>()
     return c.json({ ok: true });
   })
 
+  /** Ping a single debtor via the bot. */
+  .post(
+    "/games/:id/remind",
+    roleRequired("organizer"),
+    idParam,
+    zValidator("json", z.object({ userId: z.number().int().positive() })),
+    async (c) => {
+      const game = await loadGame(c.req.valid("param").id);
+      const { userId } = c.req.valid("json");
+      const target = await db.query.signups.findFirst({
+        where: and(eq(signups.gameId, game.id), eq(signups.userId, userId)),
+      });
+      if (!target || target.status !== "confirmed" || debtOf(game.price, target) === 0) {
+        throw new HTTPException(404, { message: "Долга по этой игре нет" });
+      }
+      const sent = await notifyUsers(
+        [userId],
+        `💰 Напоминание об оплате: <b>${game.title}</b> — ${debtOf(game.price, target)}.\nПереведи по QR или рассчитайся наличными на игре.`,
+        `/#/game/${game.id}/pay`,
+      );
+      return c.json({ sent });
+    },
+  )
+
   /** Ping every debtor of a game via the bot. */
   .post("/games/:id/remind-debtors", roleRequired("organizer"), idParam, async (c) => {
     const game = await loadGame(c.req.valid("param").id);
