@@ -70,7 +70,7 @@ export function Seasons() {
                   <button
                     key={s.id}
                     className="lu-pool-card"
-                    onClick={() => toast("Архив сезона — лидерборды доступны до конца хранения")}
+                    onClick={() => navigate(`/seasons/${s.id}`)}
                   >
                     <span className="lu-mode-card__ic" style={{ background: "var(--fill-tertiary)", color: "var(--text-hint)" }}>
                       <I.Flag width={18} height={18} />

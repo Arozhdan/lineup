@@ -8,7 +8,7 @@ import { authRequired, type AuthEnv } from "../auth.js";
 import { db } from "../db/client.js";
 import { games, signups, users } from "../db/schema.js";
 import { nowSec, publicUser } from "../lib/serialize.js";
-import { activeSeasonData } from "../lib/season.js";
+import { activeSeasonData, seasonData } from "../lib/season.js";
 
 const emptyAgg = (userId: number) => ({
   userId,
@@ -122,10 +122,13 @@ export const profileRoutes = new Hono<AuthEnv>()
     return c.json(list.map(publicUser));
   })
 
-  /** Both leaderboards (points & reliability) for the active season. */
-  .get("/leaderboard", async (c) => {
+  /** Both leaderboards (points & reliability); ?season=<id> for archived seasons. */
+  .get(
+    "/leaderboard",
+    zValidator("query", z.object({ season: z.coerce.number().int().positive().optional() })),
+    async (c) => {
     const me = c.get("user");
-    const { aggregates, reliability, season } = await activeSeasonData();
+    const { aggregates, reliability, season } = await seasonData(c.req.valid("query").season ?? null);
     const userIds = [...new Set([...aggregates.keys(), ...reliability.keys()])];
     const players = userIds.length ? await db.query.users.findMany({ where: inArray(users.id, userIds) }) : [];
     const byId = new Map(players.map((u) => [u.id, u]));
@@ -150,5 +153,10 @@ export const profileRoutes = new Hono<AuthEnv>()
         games: r.attended,
         you: r.userId === me.id,
       }));
-    return c.json({ season: season?.name ?? null, points, reliability: rel });
+    return c.json({
+      season: season?.name ?? null,
+      seasonRange: season ? { startsAt: season.startsAt, endsAt: season.endsAt, active: season.active } : null,
+      points,
+      reliability: rel,
+    });
   });

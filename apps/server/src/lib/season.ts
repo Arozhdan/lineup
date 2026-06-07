@@ -10,9 +10,11 @@ export type SeasonData = {
   finishedCount: number;
 };
 
-/** Load and aggregate everything needed for stats/leaderboards of the active season. */
-export async function activeSeasonData(): Promise<SeasonData> {
-  const season = (await db.query.seasons.findFirst({ where: eq(seasons.active, true) })) ?? null;
+/** Load and aggregate stats/leaderboards for one season (default: the active one). */
+export async function seasonData(seasonId: number | null = null): Promise<SeasonData> {
+  const season = seasonId
+    ? ((await db.query.seasons.findFirst({ where: eq(seasons.id, seasonId) })) ?? null)
+    : ((await db.query.seasons.findFirst({ where: eq(seasons.active, true) })) ?? null);
   const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
   if (!cfg) throw new Error("settings row missing");
 
@@ -36,3 +38,6 @@ export async function activeSeasonData(): Promise<SeasonData> {
     finishedCount: finished.length,
   };
 }
+
+/** Back-compat alias: aggregates for the active season. */
+export const activeSeasonData = (): Promise<SeasonData> => seasonData(null);

@@ -47,6 +47,7 @@ import { Venues } from "@/screens/Venues";
 import { Schedule } from "@/screens/Schedule";
 import { Seasons } from "@/screens/Seasons";
 import { NewSeason } from "@/screens/NewSeason";
+import { SeasonArchive } from "@/screens/SeasonArchive";
 import { Tools } from "@/screens/Tools";
 import { Roles } from "@/screens/Roles";
 import { Community } from "@/screens/Community";
@@ -169,6 +170,7 @@ export function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/seasons" element={<Seasons />} />
           <Route path="/seasons/new" element={<NewSeason />} />
+          <Route path="/seasons/:id" element={<SeasonArchive />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/broadcast" element={<Broadcast />} />
           <Route path="/moderation" element={<Moderation />} />
