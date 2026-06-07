@@ -153,7 +153,9 @@ export const gamesRoutes = new Hono<AuthEnv>()
       restricted: isAdmin && !!game.visibleTo?.length,
       visibleTo: isAdmin ? (game.visibleTo ?? null) : null,
       audienceGroups,
-      venueInfo: venue ? { id: venue.id, name: venue.name, addr: venue.addr, rent: venue.rent } : null,
+      venueInfo: venue
+        ? { id: venue.id, name: venue.name, addr: venue.addr, rent: venue.rent, mapsUrl: venue.mapsUrl, lat: venue.lat, lng: venue.lng }
+        : null,
       startedAt: game.startedAt,
       finishedAt: game.finishedAt,
       cancelDeadlineHours: cfg?.cancelDeadlineHours ?? 2,
@@ -228,26 +230,18 @@ export const gamesRoutes = new Hono<AuthEnv>()
     if (game.cancelledAt) throw new HTTPException(409, { message: "Игра уже отменена" });
     await db.update(games).set({ cancelledAt: nowSec() }).where(eq(games.id, game.id));
 
-    // Auto-refund everyone who already paid.
+    // Queue refunds for everyone who already paid; the organizer closes
+    // them in «Возвраты» once the money is actually returned.
     const all = await db.query.signups.findMany({ where: eq(signups.gameId, game.id) });
-    const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
     for (const s of all) {
       if (s.status === "confirmed" && (s.payStatus === "paid" || s.payStatus === "partial") && game.price > 0) {
         const amount = s.payStatus === "paid" ? game.price * (1 + s.guests) : Math.round(game.price / 2);
-        await db.insert(refunds).values({
-          gameId: game.id,
-          userId: s.userId,
-          amount,
-          reason: "игра отменена",
-          auto: true,
-          status: cfg?.autoRefund ? "done" : "pending",
-          decidedAt: cfg?.autoRefund ? nowSec() : null,
-        });
+        await db.insert(refunds).values({ gameId: game.id, userId: s.userId, amount, reason: "игра отменена", auto: true });
       }
     }
     const { reason } = c.req.valid("json");
     await audit(me.id, "cancel", game.title, reason);
     const ids = await rosterUserIds(game.id);
-    await notifyUsers(ids, `❌ <b>${game.title}</b> отменена.${reason ? `\nПричина: ${reason}` : ""}\nВзносы вернутся автоматически.`);
+    await notifyUsers(ids, `❌ <b>${game.title}</b> отменена.${reason ? `\nПричина: ${reason}` : ""}\nОрганизатор вернёт взносы.`);
     return c.json({ ok: true });
   });

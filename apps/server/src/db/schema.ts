@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const now = sql`(unixepoch())`;
 
@@ -69,6 +69,10 @@ export const venues = sqliteTable("venues", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   addr: text("addr").notNull().default(""),
+  /** Pasted Google/Apple/Mapy link; coords are extracted server-side. */
+  mapsUrl: text("maps_url").notNull().default(""),
+  lat: real("lat"),
+  lng: real("lng"),
   rent: integer("rent").notNull().default(0),
   balls: integer("balls").notNull().default(0),
   bibs: integer("bibs").notNull().default(0),

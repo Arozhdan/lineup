@@ -25,6 +25,12 @@ export function Pay() {
     queryKey: ["settings"],
     queryFn: () => unwrap(api.settings.$get()),
   });
+  // Personal QR Platba (SPD) with the exact amount, when the owner set an IBAN.
+  const payqrQuery = useQuery({
+    queryKey: ["payqr", id],
+    queryFn: () => unwrap(api.games[":id"].payqr.$get({ param: { id: String(id) } })),
+    enabled: !!id,
+  });
   const g = gameQuery.data;
   const cfg = settingsQuery.data;
 
@@ -106,9 +112,11 @@ export function Pay() {
           </div>
         </div>
 
-        <QrBox src={cfg.qrImage || null} />
+        <QrBox src={payqrQuery.data?.dataUrl ?? (cfg.qrImage || null)} />
         <p className="lu-note lu-center" style={{ marginTop: -2 }}>
-          Отсканируй QR в приложении банка. Реквизиты задаёт владелец сообщества.
+          {payqrQuery.data?.dataUrl
+            ? "QR Platba с точной суммой — отсканируй в приложении банка."
+            : "Отсканируй QR в приложении банка. Реквизиты задаёт владелец сообщества."}
         </p>
 
         <div className="lu-summ" style={{ marginBottom: 0 }}>
@@ -139,7 +147,7 @@ export function Pay() {
           Скопировать реквизиты
         </Button>
         <p className="lu-note lu-center">
-          Деньги вернутся автоматически, если отменишь запись до дедлайна ({fmtDeadline(g.deadlineAt)}).
+          Если отменишь до дедлайна — организатор вернёт взнос ({fmtDeadline(g.deadlineAt)}).
         </p>
       </div>
       <div className="lu-mainbtn">

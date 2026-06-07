@@ -121,6 +121,55 @@ export function GameDetail() {
   );
 }
 
+/** Live Google embed when the venue has coords/address; stylized pitch otherwise. */
+function VenueMap({
+  venue,
+  fallbackName,
+}: {
+  venue: GameDetailData["venueInfo"];
+  fallbackName: string;
+}) {
+  const name = venue?.name ?? fallbackName;
+  const query = venue?.lat != null && venue?.lng != null ? `${venue.lat},${venue.lng}` : venue?.addr || "";
+  const openLink = venue?.mapsUrl || (query ? `https://maps.google.com/?q=${encodeURIComponent(query)}` : "");
+
+  if (!query) {
+    return (
+      <div className="lu-map">
+        <div className="lu-map__road" style={{ left: 0, right: 0, top: "62%", height: 8 }} />
+        <div className="lu-map__road" style={{ top: 0, bottom: 0, left: "30%", width: 7 }} />
+        <div className="lu-map__pin">
+          <I.Pin width={30} height={30} />
+        </div>
+        <div className="lu-map__chip">
+          <I.Pin width={12} height={12} style={{ verticalAlign: -1, marginRight: 4 }} />
+          {name}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="lu-map" style={{ height: 160 }}>
+      <iframe
+        title="Карта"
+        src={`https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&hl=ru&output=embed`}
+        style={{ border: 0, width: "100%", height: "100%", display: "block" }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+      <button
+        type="button"
+        className="lu-map__chip"
+        style={{ border: "none", cursor: "pointer" }}
+        onClick={() => window.open(openLink, "_blank")}
+      >
+        <I.Pin width={12} height={12} style={{ verticalAlign: -1, marginRight: 4 }} />
+        {name} · открыть
+      </button>
+    </div>
+  );
+}
+
 function GameBody({
   g,
   expanded,
@@ -160,17 +209,7 @@ function GameBody({
         </div>
       </div>
 
-      <div className="lu-map">
-        <div className="lu-map__road" style={{ left: 0, right: 0, top: "62%", height: 8 }} />
-        <div className="lu-map__road" style={{ top: 0, bottom: 0, left: "30%", width: 7 }} />
-        <div className="lu-map__pin">
-          <I.Pin width={30} height={30} />
-        </div>
-        <div className="lu-map__chip">
-          <I.Pin width={12} height={12} style={{ verticalAlign: -1, marginRight: 4 }} />
-          {g.venueInfo?.name ?? g.venue}
-        </div>
-      </div>
+      <VenueMap venue={g.venueInfo} fallbackName={g.venue} />
 
       {g.my?.status === "confirmed" && (
         <div className="lu-youin-banner">

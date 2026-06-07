@@ -41,9 +41,9 @@ await db
   .set({
     name: "Хамовники Футбол",
     currency: "Kč",
-    qrRecipient: "Хамовники Футбол",
-    qrAccount: "40817 0000 0000 4471",
-    qrBank: "Т-Банк",
+    qrRecipient: "Hamovniki Futbal z.s.",
+    qrAccount: "CZ65 0800 0000 1920 0014 5399",
+    qrBank: "Česká spořitelna",
   })
   .where(eq(settings.id, 1));
 

@@ -1,6 +1,8 @@
 /* 1.1 Приветствие / вход. Пользователь уже аутентифицирован — кнопка ведёт в онбординг. */
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { Button } from "@/ds";
+import { api, unwrap } from "@/api/client";
+import { Badge, Button } from "@/ds";
 
 const TgGlyph = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -8,14 +10,13 @@ const TgGlyph = () => (
   </svg>
 );
 
-const STATS: [string, string][] = [
-  ["320+", "игроков"],
-  ["48", "игр/мес"],
-  ["4.9", "рейтинг"],
-];
-
 export function Welcome() {
   const navigate = useNavigate();
+  const settingsQuery = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => unwrap(api.settings.$get()),
+    staleTime: 60_000,
+  });
   return (
     <div className="lu-scr">
       <div className="lu-welcome">
@@ -34,16 +35,11 @@ export function Welcome() {
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 18, marginTop: 18 }}>
-          {STATS.map(([v, l]) => (
-            <div key={l} style={{ textAlign: "center" }}>
-              <div className="lu-display" style={{ fontSize: 24, color: "var(--text)" }}>
-                {v}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--text-hint)" }}>{l}</div>
-            </div>
-          ))}
-        </div>
+        {settingsQuery.data?.name && (
+          <Badge variant="accent" style={{ marginTop: 18 }}>
+            сообщество «{settingsQuery.data.name}»
+          </Badge>
+        )}
       </div>
       <div className="lu-mainbtn lu-mainbtn--ghost">
         <Button block size="lg" leadingIcon={<TgGlyph />} onClick={() => navigate("/onboarding")}>

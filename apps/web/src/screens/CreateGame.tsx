@@ -149,7 +149,7 @@ export function CreateGame() {
           label="Название"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={isGame ? "напр. Хамовники · 5×5" : "напр. Воскресный митап"}
+          placeholder={isGame ? "напр. Вечерние пятёрки" : "напр. Воскресный митап"}
         />
 
         {isGame && (

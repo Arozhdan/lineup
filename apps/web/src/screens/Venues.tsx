@@ -9,14 +9,14 @@ import { I } from "@/icons";
 import { fmtMoney } from "@/lib/format";
 import { AddVenueSheet } from "@/screens/shared/AddVenueSheet";
 
-type Venue = { id: number; name: string; addr: string; rent: number; balls: number; bibs: number };
+type Venue = { id: number; name: string; addr: string; mapsUrl: string; rent: number; balls: number; bibs: number };
 
 export function Venues() {
   const navigate = useNavigate();
   const run = useAction();
   const [addOpen, setAddOpen] = useState(false);
   const [edit, setEdit] = useState<Venue | null>(null);
-  const [form, setForm] = useState({ name: "", addr: "", rent: "", balls: "", bibs: "" });
+  const [form, setForm] = useState({ name: "", addr: "", mapsUrl: "", rent: "", balls: "", bibs: "" });
   const [saving, setSaving] = useState(false);
 
   const venuesQuery = useQuery({
@@ -26,7 +26,7 @@ export function Venues() {
   const list = (venuesQuery.data ?? []) as Venue[];
 
   const openEdit = (v: Venue) => {
-    setForm({ name: v.name, addr: v.addr, rent: String(v.rent), balls: String(v.balls), bibs: String(v.bibs) });
+    setForm({ name: v.name, addr: v.addr, mapsUrl: v.mapsUrl ?? "", rent: String(v.rent), balls: String(v.balls), bibs: String(v.bibs) });
     setEdit(v);
   };
 
@@ -38,7 +38,7 @@ export function Venues() {
         unwrap(
           api.venues[":id"].$patch({
             param: { id: String(edit.id) },
-            json: { name: form.name.trim(), addr: form.addr.trim(), rent: +form.rent || 0, balls: +form.balls || 0, bibs: +form.bibs || 0 },
+            json: { name: form.name.trim(), addr: form.addr.trim(), mapsUrl: form.mapsUrl.trim(), rent: +form.rent || 0, balls: +form.balls || 0, bibs: +form.bibs || 0 },
           }),
         ),
       { ok: "Площадка сохранена", invalidate: [["venues"]] },
@@ -108,6 +108,14 @@ export function Venues() {
         <div className="lu-stack" style={{ gap: 12 }}>
           <Input label="Название поля" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} leadingIcon={<I.Field width={16} height={16} />} />
           <Input label="Адрес" value={form.addr} onChange={(e) => setForm((f) => ({ ...f, addr: e.target.value }))} leadingIcon={<I.Pin width={16} height={16} />} />
+          <Input
+            label="Ссылка на Google Maps"
+            value={form.mapsUrl}
+            onChange={(e) => setForm((f) => ({ ...f, mapsUrl: e.target.value }))}
+            placeholder="https://maps.app.goo.gl/…"
+            leadingIcon={<I.Map width={16} height={16} />}
+            help="Из неё возьмём координаты для карты на странице игры."
+          />
           <Input label="Аренда за слот" value={form.rent} onChange={(e) => setForm((f) => ({ ...f, rent: e.target.value }))} inputMode="numeric" leadingIcon={<I.Coins width={16} height={16} />} />
           <div className="lu-form-grid">
             <Input label="Мячи" value={form.balls} onChange={(e) => setForm((f) => ({ ...f, balls: e.target.value }))} inputMode="numeric" />

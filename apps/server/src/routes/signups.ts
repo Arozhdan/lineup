@@ -10,6 +10,8 @@ import { db } from "../db/client.js";
 import { moderation, refunds, settings, signups, users, type Game, type Signup } from "../db/schema.js";
 import { filledCount, gameCapacity, nowSec } from "../lib/serialize.js";
 import { canSeeGame, myGroupIds } from "../lib/visibility.js";
+import { buildSpd, looksLikeIban } from "../lib/spd.js";
+import QRCode from "qrcode";
 import { loadGame } from "./games.js";
 
 const idParam = zValidator("param", z.object({ id: z.coerce.number().int().positive() }));
@@ -107,14 +109,14 @@ export const signupRoutes = new Hono<AuthEnv>()
     let refunded = false;
     if (wasConfirmed && !late && (mine.payStatus === "paid" || mine.payStatus === "partial") && game.price > 0) {
       const amount = mine.payStatus === "paid" ? game.price * (1 + mine.guests) : Math.round(game.price / 2);
+      // The app never moves money — the refund lands in the organizer's
+      // queue and is closed once they actually transfer it back.
       await db.insert(refunds).values({
         gameId: game.id,
         userId: me.id,
         amount,
         reason: "отмена до дедлайна",
         auto: true,
-        status: cfg?.autoRefund ? "done" : "pending",
-        decidedAt: cfg?.autoRefund ? nowSec() : null,
       });
       refunded = true;
     }
@@ -139,6 +141,30 @@ export const signupRoutes = new Hono<AuthEnv>()
     if (existing) await db.update(signups).set({ ...values, createdAt: nowSec() }).where(eq(signups.id, existing.id));
     else await db.insert(signups).values({ gameId: game.id, userId: me.id, ...values });
     return c.json({ ok: true });
+  })
+
+  /** Personal QR Platba for this game: exact amount + game as variable symbol.
+      Falls back to null when the owner hasn't configured an IBAN. */
+  .get("/:id/payqr", idParam, async (c) => {
+    const me = c.get("user");
+    const game = await loadGame(c.req.valid("param").id);
+    const mine = await db.query.signups.findFirst({
+      where: and(eq(signups.gameId, game.id), eq(signups.userId, me.id)),
+    });
+    const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
+    if (!cfg || !looksLikeIban(cfg.qrAccount)) return c.json({ dataUrl: null, amount: 0 });
+    const amount =
+      mine?.payStatus === "partial" ? Math.round(game.price / 2) : game.price * (1 + (mine?.guests ?? 0));
+    const payload = buildSpd({
+      iban: cfg.qrAccount,
+      recipient: cfg.qrRecipient || cfg.name,
+      amount,
+      currency: cfg.currency,
+      message: game.title,
+      vs: game.id,
+    });
+    const dataUrl = await QRCode.toDataURL(payload, { width: 512, margin: 2 });
+    return c.json({ dataUrl, amount });
   })
 
   /** "Я оплатил" — player marks the QR transfer as done. */

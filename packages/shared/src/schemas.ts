@@ -97,6 +97,7 @@ export const signupSchema = z.object({
 export const venueSchema = z.object({
   name: z.string().trim().min(1, "Название обязательно").max(120),
   addr: z.string().trim().max(200).default(""),
+  mapsUrl: z.string().trim().max(500).default(""),
   rent: z.number().int().min(0).default(0),
   balls: z.number().int().min(0).default(0),
   bibs: z.number().int().min(0).default(0),

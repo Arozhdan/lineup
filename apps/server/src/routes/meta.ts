@@ -9,6 +9,7 @@ import { notifyUsers, rosterUserIds } from "../bot.js";
 import { db } from "../db/client.js";
 import { auditLog, broadcasts, complaints, games, moderation, seasons, series, signups, users, venues } from "../db/schema.js";
 import { audit } from "../lib/audit.js";
+import { resolveMapsLink } from "../lib/maps.js";
 import { nowSec, publicUser } from "../lib/serialize.js";
 import { activeSeasonData } from "../lib/season.js";
 
@@ -24,14 +25,25 @@ export const metaRoutes = new Hono<AuthEnv>()
   })
   .post("/venues", roleRequired("organizer"), zValidator("json", venueSchema), async (c) => {
     const me = c.get("user");
-    const [created] = await db.insert(venues).values(c.req.valid("json")).returning();
+    const input = c.req.valid("json");
+    const coords = input.mapsUrl ? await resolveMapsLink(input.mapsUrl) : null;
+    const [created] = await db
+      .insert(venues)
+      .values({ ...input, lat: coords?.lat ?? null, lng: coords?.lng ?? null })
+      .returning();
     await audit(me.id, "venue", created!.name, "добавлена площадка");
     return c.json(created!, 201);
   })
   .patch("/venues/:id", roleRequired("organizer"), idParam, zValidator("json", venueSchema.partial()), async (c) => {
     const venue = await db.query.venues.findFirst({ where: eq(venues.id, c.req.valid("param").id) });
     if (!venue) throw new HTTPException(404, { message: "Площадка не найдена" });
-    await db.update(venues).set(c.req.valid("json")).where(eq(venues.id, venue.id));
+    const patch: Record<string, unknown> = { ...c.req.valid("json") };
+    if (typeof patch.mapsUrl === "string" && patch.mapsUrl !== venue.mapsUrl) {
+      const coords = patch.mapsUrl ? await resolveMapsLink(patch.mapsUrl) : null;
+      patch.lat = coords?.lat ?? null;
+      patch.lng = coords?.lng ?? null;
+    }
+    await db.update(venues).set(patch).where(eq(venues.id, venue.id));
     return c.json({ ok: true });
   })
   .delete("/venues/:id", roleRequired("organizer"), idParam, async (c) => {
@@ -313,7 +325,6 @@ export const metaRoutes = new Hono<AuthEnv>()
         userIds = all.filter((s) => s.status === "waitlist").map((s) => s.userId);
       }
     }
-    userIds = userIds.filter((id) => id !== me.id);
     const sent = await notifyUsers(userIds, `📣 ${text}`);
     await db.insert(broadcasts).values({ byId: me.id, audience, gameId, text, sentTo: sent });
     return c.json({ sent, total: userIds.length });

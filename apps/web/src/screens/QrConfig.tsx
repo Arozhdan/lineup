@@ -104,12 +104,12 @@ export function QrConfig() {
               Сгенерировать
             </Button>
           </div>
-          <p className="lu-note lu-center" style={{ padding: 0 }}>Загрузи QR из банка или сгенерируй по реквизитам ниже.</p>
+          <p className="lu-note lu-center" style={{ padding: 0 }}>Загрузи QR из банка или сгенерируй QR Platba (SPD) — его читают Česká spořitelna и все чешские банки.</p>
         </div>
 
         <ListSection label="Куда приходят деньги">
           <Input label="Получатель" value={form.qrRecipient} onChange={(e) => set({ qrRecipient: e.target.value })} leadingIcon={<I.User width={16} height={16} />} />
-          <Input label="Счёт" value={form.qrAccount} onChange={(e) => set({ qrAccount: e.target.value })} leadingIcon={<I.Wallet width={16} height={16} />} />
+          <Input label="IBAN · для QR Platba" value={form.qrAccount} onChange={(e) => set({ qrAccount: e.target.value })} leadingIcon={<I.Wallet width={16} height={16} />} />
           <Input label="Банк" value={form.qrBank} onChange={(e) => set({ qrBank: e.target.value })} leadingIcon={<I.Shield width={16} height={16} />} />
         </ListSection>
 
@@ -121,25 +121,11 @@ export function QrConfig() {
         />
 
         <ListSection label="Автоматика">
-          <ListItem
-            icon={<I.CheckCircle width={16} height={16} />}
-            iconColor="var(--accent)"
-            title="Подтверждать оплату автоматически"
-            subtitle="по входящему платежу"
-            trailing={<Switch checked={form.qrAutoConfirm} onChange={(v) => set({ qrAutoConfirm: v })} />}
-          />
-          <ListItem
-            icon={<I.Repeat width={16} height={16} />}
-            iconColor="var(--success)"
-            title="Автовозврат при отмене"
-            subtitle="до дедлайна"
-            trailing={<Switch checked={form.autoRefund} onChange={(v) => set({ autoRefund: v })} />}
-          />
         </ListSection>
 
         <p className="lu-note lu-center">
           <I.Lock width={13} height={13} style={{ verticalAlign: -2, marginRight: 4 }} />
-          Карты и СБП игрокам не показываются — только QR.
+          Игроки платят только по QR — переводом на счёт сообщества.
         </p>
       </div>
       <div className="lu-mainbtn">

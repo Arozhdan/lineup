@@ -18,6 +18,11 @@ export function GamesFeed() {
     queryKey: ["games"],
     queryFn: () => unwrap(api.games.$get()),
   });
+  const settingsQuery = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => unwrap(api.settings.$get()),
+    staleTime: 60_000,
+  });
 
   const list = (gamesQuery.data ?? []).filter((g) => filter === "all" || g.kind === filter);
 
@@ -29,7 +34,7 @@ export function GamesFeed() {
         leading={
           <span style={{ paddingLeft: 10, fontSize: 13, color: "var(--text-hint)", display: "inline-flex", alignItems: "center", gap: 5 }}>
             <I.Pin width={14} height={14} />
-            Хамовники
+            {settingsQuery.data?.name ?? ""}
           </span>
         }
         trailing={

@@ -60,7 +60,7 @@ export function CancelSignup() {
     setBusy(false);
     setSheet(false);
     if (!ok) return;
-    toast(refunded ? "Запись отменена · взнос вернётся" : "Запись отменена");
+    toast(refunded ? "Запись отменена · организатор вернёт взнос" : "Запись отменена");
     navigate("/", { replace: true });
   };
 
@@ -122,7 +122,7 @@ export function CancelSignup() {
       <Sheet open={sheet} onClose={() => setSheet(false)} title="Отменить запись?">
         <p className="lu-sheet-lede">
           {g.price
-            ? `Взнос ${fmtMoney(g.price)} вернётся на карту в течение 1–2 дней, так как отмена до дедлайна. `
+            ? `Взнос ${fmtMoney(g.price)} вернёт организатор — заявка появится у него в «Возвратах», так как отмена до дедлайна. `
             : ""}
           Твоё место займёт первый из листа ожидания.
         </p>

@@ -11,6 +11,7 @@ import { db } from "../db/client.js";
 import { settings } from "../db/schema.js";
 import { env } from "../env.js";
 import { audit } from "../lib/audit.js";
+import { buildSpd, looksLikeIban } from "../lib/spd.js";
 
 export async function loadSettings() {
   const cfg = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
@@ -47,20 +48,21 @@ export const settingsRoutes = new Hono<AuthEnv>()
     return c.json({ qrImage: `/uploads/${name}` });
   })
 
-  /** Generate a QR image from the saved payment credentials. */
+  /** Generate a QR Platba (Czech SPD standard) from the saved IBAN.
+      Scannable by Česká spořitelna and every other CZ banking app. */
   .post("/qr/generate", roleRequired("owner"), async (c) => {
     const cfg = await loadSettings();
-    if (!cfg.qrRecipient && !cfg.qrAccount) {
-      throw new HTTPException(400, { message: "Сначала заполни получателя и счёт" });
+    if (!looksLikeIban(cfg.qrAccount)) {
+      throw new HTTPException(400, {
+        message: "Для QR Platba укажи IBAN (например CZ65 0800 …). Либо загрузи готовый QR из банка.",
+      });
     }
-    const payload = [
-      `Получатель: ${cfg.qrRecipient}`,
-      cfg.qrAccount ? `Счёт: ${cfg.qrAccount}` : "",
-      cfg.qrBank ? `Банк: ${cfg.qrBank}` : "",
-      cfg.qrNote ? `Назначение: ${cfg.qrNote}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const payload = buildSpd({
+      iban: cfg.qrAccount,
+      recipient: cfg.qrRecipient || cfg.name,
+      currency: cfg.currency,
+      message: cfg.qrNote.replace("{название}", "").replace("·", "").trim() || cfg.name,
+    });
     fs.mkdirSync(env.uploadDir, { recursive: true });
     const name = `qr-${Date.now()}.png`;
     await QRCode.toFile(path.join(env.uploadDir, name), payload, { width: 512, margin: 2 });

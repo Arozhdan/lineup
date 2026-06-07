@@ -56,7 +56,7 @@ export function Refunds() {
               ) : r.status === "rejected" ? (
                 <Badge variant="neutral">отклонено</Badge>
               ) : r.auto ? (
-                <Badge variant="success"><I.Check width={11} height={11} />автовозврат</Badge>
+                <Badge variant="success"><I.Check width={11} height={11} />по отмене</Badge>
               ) : (
                 <Badge variant="warning">нужно решение</Badge>
               )}
@@ -71,7 +71,7 @@ export function Refunds() {
           </Card>
         ))}
 
-        <p className="lu-note lu-center">Возвраты по отменам до дедлайна происходят автоматически.</p>
+        <p className="lu-note lu-center">Возврат закрывается, когда организатор фактически вернул деньги.</p>
       </div>
     </div>
   );
