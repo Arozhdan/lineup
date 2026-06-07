@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { gameStats, games, mvpVotes, seasons, settings, signups } from "../db/schema.js";
+import { gameStats, games, moderation, mvpVotes, seasons, settings, signups } from "../db/schema.js";
 import { aggregatePlayers, aggregateReliability, type PlayerAggregate, type ReliabilityRow } from "./stats.js";
 
 export type SeasonData = {
@@ -30,11 +30,17 @@ export async function seasonData(seasonId: number | null = null): Promise<Season
   // Reliability spans the whole history, not just the season.
   const allSignups = await db.query.signups.findMany();
   const finishedIds = new Set(finishedAll.map((g) => g.id));
+  // Active (not lifted) moderation penalties each count as a missed attendance.
+  const penaltyRows = await db.query.moderation.findMany();
+  const penalties = new Map<number, number>();
+  for (const row of penaltyRows) {
+    if (row.kind === "penalty" && !row.liftedAt) penalties.set(row.userId, (penalties.get(row.userId) ?? 0) + 1);
+  }
 
   return {
     season,
     aggregates: aggregatePlayers(finished, seasonSignups, stats, votes, cfg),
-    reliability: aggregateReliability(finishedIds, allSignups),
+    reliability: aggregateReliability(finishedIds, allSignups, penalties),
     finishedCount: finished.length,
   };
 }

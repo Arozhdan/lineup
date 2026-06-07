@@ -79,7 +79,7 @@ export const TEAM_NAME: Record<TeamSide, string> = { a: "Светлые", b: "Т
 export const REFUND_STATUSES = ["pending", "done", "rejected"] as const;
 export type RefundStatus = (typeof REFUND_STATUSES)[number];
 
-export const MODERATION_KINDS = ["warning", "ban"] as const;
+export const MODERATION_KINDS = ["warning", "ban", "penalty"] as const;
 export type ModerationKind = (typeof MODERATION_KINDS)[number];
 
 export const BROADCAST_AUDIENCES = ["roster", "waitlist", "all"] as const;
@@ -91,5 +91,5 @@ export const BROADCAST_AUDIENCE_LABEL: Record<BroadcastAudience, string> = {
   all: "Все игроки",
 };
 
-export const AUDIT_ACTIONS = ["ban", "warn", "refund", "edit", "cancel", "season", "settings", "role", "venue"] as const;
+export const AUDIT_ACTIONS = ["ban", "warn", "penalty", "refund", "edit", "cancel", "season", "settings", "role", "venue"] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

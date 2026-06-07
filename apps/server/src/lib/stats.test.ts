@@ -77,6 +77,22 @@ describe("aggregateReliability", () => {
   });
 });
 
+describe("aggregateReliability penalties", () => {
+  it("counts each penalty as a missed attendance", () => {
+    const finished = new Set([1, 2, 3]);
+    const signupRows = [signup(1, 10, "a"), signup(2, 10, "a"), signup(3, 10, "a")];
+    const rel = aggregateReliability(finished, signupRows, new Map([[10, 1]]));
+    // 3 attended of (3 signups + 1 penalty) = 75%
+    expect(rel.get(10)!.reliability).toBe(75);
+    expect(rel.get(10)!.penalties).toBe(1);
+  });
+
+  it("creates a row for a player with only penalties", () => {
+    const rel = aggregateReliability(new Set(), [], new Map([[7, 2]]));
+    expect(rel.get(7)!.reliability).toBe(0);
+  });
+});
+
 describe("mvpWinners", () => {
   it("picks the most voted player per game", () => {
     const winners = mvpWinners([

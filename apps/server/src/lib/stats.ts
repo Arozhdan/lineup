@@ -24,6 +24,8 @@ export type ReliabilityRow = {
   attended: number;
   lateCancels: number;
   noShows: number;
+  /** Moderation penalties — each counts as one missed attendance. */
+  penalties: number;
   reliability: number;
 };
 
@@ -128,12 +130,16 @@ export function aggregatePlayers(
 }
 
 /** Attendance reliability across finished games (not season-scoped). */
-export function aggregateReliability(finishedGameIds: Set<number>, allSignups: Signup[]): Map<number, ReliabilityRow> {
+export function aggregateReliability(
+  finishedGameIds: Set<number>,
+  allSignups: Signup[],
+  penalties: Map<number, number> = new Map(),
+): Map<number, ReliabilityRow> {
   const out = new Map<number, ReliabilityRow>();
   const get = (userId: number): ReliabilityRow => {
     let r = out.get(userId);
     if (!r) {
-      r = { userId, signups: 0, attended: 0, lateCancels: 0, noShows: 0, reliability: 100 };
+      r = { userId, signups: 0, attended: 0, lateCancels: 0, noShows: 0, penalties: 0, reliability: 100 };
       out.set(userId, r);
     }
     return r;
@@ -152,8 +158,12 @@ export function aggregateReliability(finishedGameIds: Set<number>, allSignups: S
     else if (s.checkedIn) r.attended++;
     else r.attended++; // confirmed on a finished game without explicit check-in counts as attended
   }
+  for (const [userId, n] of penalties) {
+    if (n > 0) get(userId).penalties = n;
+  }
   for (const r of out.values()) {
-    r.reliability = r.signups ? Math.round((100 * r.attended) / r.signups) : 100;
+    const denom = r.signups + r.penalties;
+    r.reliability = denom ? Math.round((100 * r.attended) / denom) : 100;
   }
   return out;
 }

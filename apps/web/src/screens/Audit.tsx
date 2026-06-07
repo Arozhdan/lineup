@@ -11,6 +11,7 @@ import { fmtWhen } from "@/lib/format";
 const COLOR: Record<AuditAction, string> = {
   ban: "var(--danger)",
   warn: "var(--danger)",
+  penalty: "var(--info)",
   refund: "var(--info)",
   edit: "var(--gray-500)",
   cancel: "var(--gray-500)",
@@ -25,6 +26,7 @@ const icon = (action: AuditAction): ReactNode => {
   switch (action) {
     case "ban":
       return <I.Ban {...props} />;
+    case "penalty":
     case "warn":
       return <I.AlertTriangle {...props} />;
     case "refund":
@@ -49,6 +51,8 @@ const verb = (action: AuditAction, target: string): string => {
       return `забанил ${target}`;
     case "warn":
       return `предупредил ${target}`;
+    case "penalty":
+      return `снизил надёжность ${target}`;
     case "refund":
       return `вернул ${target}`;
     case "edit":

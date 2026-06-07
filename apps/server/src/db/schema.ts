@@ -193,7 +193,7 @@ export const mvpVotes = sqliteTable(
 export const moderation = sqliteTable("moderation", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull(),
-  kind: text("kind").$type<"warning" | "ban">().notNull(),
+  kind: text("kind").$type<"warning" | "ban" | "penalty">().notNull(),
   reason: text("reason").notNull().default(""),
   byId: integer("by_id").notNull(),
   liftedAt: integer("lifted_at"),

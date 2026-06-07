@@ -230,12 +230,14 @@ export const metaRoutes = new Hono<AuthEnv>()
       .update(complaints)
       .set({ status: "resolved", resolvedAt: nowSec() })
       .where(and(eq(complaints.aboutId, userId), eq(complaints.status, "open")));
-    await audit(me.id, kind === "ban" ? "ban" : "warn", `${target.first} ${target.last}`.trim(), reason);
+    await audit(me.id, kind === "ban" ? "ban" : kind === "penalty" ? "penalty" : "warn", `${target.first} ${target.last}`.trim(), reason);
     await notifyUsers(
       [userId],
       kind === "ban"
         ? `🚫 Организатор закрыл тебе запись на игры.\nПричина: ${reason}`
-        : `⚠️ Предупреждение от организатора: ${reason}`,
+        : kind === "penalty"
+          ? `📉 Модератор снизил твою надёжность.\nПричина: ${reason}\nНадёжность влияет на приоритет в листе ожидания.`
+          : `⚠️ Предупреждение от организатора: ${reason}`,
     );
     return c.json({ ok: true });
   })
@@ -244,6 +246,7 @@ export const metaRoutes = new Hono<AuthEnv>()
     if (!row) throw new HTTPException(404, { message: "Запись не найдена" });
     await db.update(moderation).set({ liftedAt: nowSec() }).where(eq(moderation.id, row.id));
     if (row.kind === "ban") await notifyUsers([row.userId], "✅ Бан снят — запись на игры снова доступна.");
+    if (row.kind === "penalty") await notifyUsers([row.userId], "✅ Штраф надёжности снят.");
     return c.json({ ok: true });
   })
 
