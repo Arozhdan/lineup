@@ -54,6 +54,12 @@ export const gamedayRoutes = new Hono<AuthEnv>()
       if (rows.length !== 1 || rows[0]!.userId !== me.id) {
         throw new HTTPException(403, { message: "Можно отметить только свои голы и пасы" });
       }
+      // Sanity cap: nobody scores more than the match total.
+      const totalGoals = game.scoreA + game.scoreB;
+      const row = rows[0]!;
+      if (row.goals > totalGoals || row.assists > totalGoals) {
+        throw new HTTPException(400, { message: `В матче забито всего ${totalGoals} гол(а) — проверь цифры` });
+      }
     }
     const roster = await confirmedRoster(game.id);
     const rosterIds = new Set(roster.map((s) => s.userId));

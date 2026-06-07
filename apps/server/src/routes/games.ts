@@ -74,9 +74,10 @@ export const gamesRoutes = new Hono<AuthEnv>()
     });
     const finished = list.filter((g) => g.finishedAt);
     const finishedIds = finished.map((g) => g.id);
+    // Only organizer-confirmed stats count anywhere outside the entry screen.
     const stats = finishedIds.length
       ? await db.query.gameStats.findMany({
-          where: and(inArray(gameStats.gameId, finishedIds), eq(gameStats.userId, me.id)),
+          where: and(inArray(gameStats.gameId, finishedIds), eq(gameStats.userId, me.id), eq(gameStats.confirmed, true)),
         })
       : [];
     const votes = finishedIds.length

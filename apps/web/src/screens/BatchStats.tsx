@@ -6,6 +6,7 @@ import { api, unwrap } from "@/api/client";
 import { useAction, useApp } from "@/app/AppContext";
 import { Avatar, Button, Card, NavBar, PositionBadge } from "@/ds";
 import { Stepper } from "@/ds/extras";
+import { I } from "@/icons";
 
 type Row = { userId: number; name: string; photoUrl: string; position: string | null; goals: number; assists: number; confirmed: boolean; isMe: boolean };
 
@@ -23,6 +24,14 @@ export function BatchStats() {
     queryFn: () => unwrap(api.games[":id"].stats.$get({ param: { id: String(id) } })),
     enabled: !!id,
   });
+
+  // Match score caps self-reported numbers (nobody scores more than the total).
+  const resultQuery = useQuery({
+    queryKey: ["result", id],
+    queryFn: () => unwrap(api.games[":id"].result.$get({ param: { id: String(id) } })),
+    enabled: !!id && isPlayer,
+  });
+  const totalGoals = resultQuery.data ? resultQuery.data.scoreA + resultQuery.data.scoreB : 99;
 
   useEffect(() => {
     if (!statsQuery.data) return;
@@ -85,14 +94,28 @@ export function BatchStats() {
                   ) : (
                     <div className="lu-statrow__steppers">
                       <div className="lu-statrow__stat">
-                        <Stepper value={p.goals} onDec={() => upd(p.userId, "goals", -1)} onInc={() => upd(p.userId, "goals", 1)} />
+                        <Stepper
+                          value={p.goals}
+                          onDec={() => upd(p.userId, "goals", -1)}
+                          onInc={() => upd(p.userId, "goals", isPlayer && p.goals >= totalGoals ? 0 : 1)}
+                        />
                         <div className="lu-statrow__cap">голы</div>
                       </div>
                       <div className="lu-statrow__stat">
-                        <Stepper value={p.assists} onDec={() => upd(p.userId, "assists", -1)} onInc={() => upd(p.userId, "assists", 1)} />
+                        <Stepper
+                          value={p.assists}
+                          onDec={() => upd(p.userId, "assists", -1)}
+                          onInc={() => upd(p.userId, "assists", isPlayer && p.assists >= totalGoals ? 0 : 1)}
+                        />
                         <div className="lu-statrow__cap">пасы</div>
                       </div>
                     </div>
+                  )}
+                  {!locked && isPlayer && (p.goals > 0 || p.assists > 0) && (
+                    <p className="lu-note" style={{ width: "100%", margin: 0 }}>
+                      <I.Clock width={12} height={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                      Попадёт в статистику и рейтинг после подтверждения организатором.
+                    </p>
                   )}
                 </div>
               );
