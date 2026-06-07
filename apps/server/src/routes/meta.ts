@@ -86,11 +86,16 @@ export const metaRoutes = new Hono<AuthEnv>()
     async (c) => {
       const { range } = c.req.valid("query");
       const { season } = await activeSeasonData();
-      const since =
-        range === "week" ? nowSec() - 7 * 86400 : range === "month" ? nowSec() - 30 * 86400 : (season?.startsAt ?? 0);
+      const since = range === "week" ? nowSec() - 7 * 86400 : nowSec() - 30 * 86400;
 
+      // "Сезон" means membership in the active season, not a date window —
+      // games of an archived season may have been played inside the new
+      // season's dates and must not leak in.
       const allGames = (await db.query.games.findMany()).filter(
-        (g) => g.finishedAt && !g.cancelledAt && g.startsAt >= since,
+        (g) =>
+          g.finishedAt &&
+          !g.cancelledAt &&
+          (range === "season" ? (season ? g.seasonId === season.id : true) : g.startsAt >= since),
       );
       const ids = allGames.map((g) => g.id);
       const allSignups = ids.length ? await db.query.signups.findMany({ where: inArray(signups.gameId, ids) }) : [];
